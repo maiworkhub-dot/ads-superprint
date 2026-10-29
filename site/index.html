@@ -351,14 +351,15 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
   <!-- ===== Camp ===== -->
   <section id="v-camp" class="view" hidden>
     <div class="card cmd" id="cmdCard" style="margin-bottom:20px">
-      <div class="card-head"><h2>Ra lệnh bật / tắt camp</h2><button class="linkbtn" id="cmdTokBtn" type="button">Mã quyền bật/tắt</button></div>
+      <div class="card-head"><h2>Ra lệnh bật / tắt camp</h2><div class="row" style="gap:12px"><button class="btn-main" id="fbLogin" type="button">Đăng nhập Facebook</button><button class="linkbtn" id="cmdTokBtn" type="button">Dùng mã thủ công</button></div></div>
+      <p class="small muted" id="fbState" aria-live="polite" style="margin:0 0 10px"></p>
       <div id="cmdTok" hidden>
-        <p class="note">Để bật/tắt camp, trang cần một mã Meta có quyền <b>ads_management</b>. Mã chỉ lưu trong trình duyệt này, không gửi đi đâu ngoài Meta. Lấy mã: Graph API Explorer → app Ads Superprint → thêm quyền ads_management, ads_read → Generate Access Token → ⓘ → Mã truy cập mở rộng → copy.</p>
+        <p class="note">(Chỉ cần khi không đăng nhập Facebook được.) Để bật/tắt camp, trang cần một mã Meta có quyền <b>ads_management</b>. Mã chỉ lưu trong trình duyệt này, không gửi đi đâu ngoài Meta. Lấy mã: Graph API Explorer → app Ads Superprint → thêm quyền ads_management, ads_read → Generate Access Token → ⓘ → Mã truy cập mở rộng → copy.</p>
         <div class="row"><input type="password" id="wtok" placeholder="Dán mã truy cập Meta (EAA…)" aria-label="Mã truy cập Meta có quyền ads_management" autocomplete="off" style="flex:1;min-width:200px"><button class="btn-main" id="wtokSave" type="button">Lưu mã</button><button class="btn-soft" id="wtokDel" type="button">Xoá mã</button></div>
         <p class="msg" id="wtokMsg" aria-live="polite"></p>
       </div>
       <textarea id="cmdIn" placeholder="Ví dụ: tắt Test tổng 1, Test tổng 2; bật Tin nhắn T6&#10;Hoặc: tắt tất cả camp đang chạy" aria-label="Lệnh bật/tắt camp"></textarea>
-      <p class="hint">Gõ <b>tắt</b> hoặc <b>bật</b> + tên camp (gõ một phần tên là đủ), nhiều camp cách nhau bằng dấu phẩy, nhiều lệnh cách nhau bằng dấu chấm phẩy hoặc xuống dòng. Nhấn <b>Enter</b> để xem trước (Shift + Enter để xuống dòng). Lệnh chỉ áp dụng cho tài khoản (và fanpage) đang chọn.</p>
+      <p class="hint">Gõ <b>tắt</b> hoặc <b>bật</b> + tên camp (gõ một phần tên là đủ), nhiều camp cách nhau bằng dấu phẩy, nhiều lệnh cách nhau bằng dấu chấm phẩy hoặc xuống dòng. Nhấn <b>Enter</b> để xem trước (Shift + Enter để xuống dòng). Tìm camp trong tài khoản đang chọn trước, không thấy thì tìm ở mọi tài khoản. Có thể viết “Tắt:” ở một dòng rồi liệt kê tên camp ở các dòng dưới.</p>
       <div id="cmdPlan"></div>
     </div>
     <div class="card">
@@ -981,26 +982,33 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
 
   function parseCommand(text) {
     const plan = [], misses = [];
-    const camps = (acc?.campaigns || []).map((c, i) => ({c, i})).filter((x) => isVis(x.i) && x.c.id);
+    const here = (acc?.campaigns || []).map((c, i) => ({c, i, a: acc})).filter((x) => isVis(x.i) && x.c.id);
+    const everywhere = (INDEX?.accounts || []).flatMap((a) => (a.campaigns || []).map((c, i) => ({c, i: a.id === acc?.id ? i : `${a.id}:${i}`, a}))).filter((x) => x.c.id);
+    const VERB = /^(tam dung|tat|dung|pause|off|bat|mo|chay|resume|on|active)\b[\s:：\-–]*(cac\s+|cam\s+|camp\s+|campaign\s+)*[\s:：\-–]*/;
+    let to = null;
     for (const clause of text.split(/[;\n]+|\s+rồi\s+/i).map((x) => x.trim()).filter(Boolean)) {
       const n = norm(clause);
-      const m = n.match(/^(tat|dung|tam dung|pause|off|bat|mo|chay|resume|on|active)\b\s*(cac\s+|cam\s+|camp\s+|campaign\s+)*/);
-      if (!m) { misses.push(`Không hiểu lệnh: “${clause}” (bắt đầu bằng “tắt” hoặc “bật”).`); continue; }
-      const to = /^(tat|dung|tam dung|pause|off)/.test(m[1]) ? 'PAUSED' : 'ACTIVE';
-      const rest = clause.slice(m[0].length).trim();
-      const terms = rest.split(/\s*,\s*|\s+và\s+|\s+va\s+/i).map((x) => x.trim().replace(/^["“”']|["“”']$/g, '')).filter(Boolean);
-      if (!terms.length) { misses.push(`Thiếu tên camp trong lệnh “${clause}”.`); continue; }
+      const m = n.match(VERB);
+      let rest = clause;
+      if (m) { to = /^(tam dung|tat|dung|pause|off)/.test(m[1]) ? 'PAUSED' : 'ACTIVE'; rest = clause.slice(m[0].length); }
+      else if (!to) { misses.push(`Không hiểu lệnh: “${clause}” (bắt đầu bằng “tắt” hoặc “bật”).`); continue; }
+      const terms = rest.split(/\s*,\s*|\s+và\s+|\s+va\s+/i).map((x) => x.trim().replace(/^[\s"“”'•\-–*:]+|[\s"“”'.:]+$/g, '')).filter((x) => norm(x).length >= 2);
+      if (!terms.length) continue; // dòng “Tắt:” – tên camp ở các dòng sau
       for (const t of terms) {
         const nt = norm(t);
         let hits;
         if (/^(tat ca|het|all)\b/.test(nt)) {
           const extra = nt.replace(/^(tat ca|het|all)\s*(cac\s+)?(cam|camp|campaign)?\s*/, '');
-          hits = camps.filter((x) => (to === 'PAUSED' ? isRunning(x.c) : !isRunning(x.c)) && (!extra || /^dang (chay|bat)$/.test(extra) || norm(x.c.campaign).includes(extra.replace(/^co (chu|ten)\s+/, ''))));
-        } else hits = camps.filter((x) => norm(x.c.campaign).includes(nt));
+          hits = here.filter((x) => (to === 'PAUSED' ? isRunning(x.c) : !isRunning(x.c)) && (!extra || /^dang (chay|bat)$/.test(extra) || norm(x.c.campaign).includes(extra.replace(/^co (chu|ten)\s+/, ''))));
+        } else {
+          hits = here.filter((x) => norm(x.c.campaign).includes(nt));
+          if (!hits.length) hits = everywhere.filter((x) => norm(x.c.campaign).includes(nt));
+        }
         if (!hits.length) { misses.push(`Không tìm thấy camp nào có tên chứa “${t}”.`); continue; }
-        for (const h of hits) if (!plan.some((p) => p.i === h.i)) plan.push({i: h.i, c: h.c, to, term: t, many: hits.length > 1});
+        for (const h of hits) if (!plan.some((p) => p.c.id === h.c.id)) plan.push({i: h.i, c: h.c, a: h.a, to, term: t});
       }
     }
+    if (!plan.length && !misses.length && to) misses.push('Thiếu tên camp sau “tắt”/“bật”.');
     return {plan, misses};
   }
   function renderPlan({plan, misses}) {
@@ -1011,18 +1019,18 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
     for (const p of plan) {
       const cb = el('input', {type: 'checkbox', checked: !(p.to === 'PAUSED' ? !isRunning(p.c) : isRunning(p.c))}); cb.dataset.i = p.i;
       wrap.append(el('label', {}, cb, el('span', {className: 'chip ' + (p.to === 'PAUSED' ? 'bad' : 'good'), textContent: p.to === 'PAUSED' ? 'Tắt' : 'Bật'}), el('span', {className: 'nm', textContent: p.c.campaign}),
-        el('span', {className: 'small muted', textContent: `hiện: ${p.c.status || '—'}`})));
+        el('span', {className: 'small muted', textContent: `${p.a && p.a.id !== acc.id ? p.a.name + ' · ' : ''}hiện: ${p.c.status || '—'}`})));
     }
     const go = el('button', {className: 'btn-main', type: 'button', textContent: `Xác nhận thực hiện`});
     const cancel = el('button', {className: 'btn-soft', type: 'button', textContent: 'Huỷ'});
     const out = el('div', {className: 'plan'});
-    box.append(el('p', {className: 'small muted', style: 'margin:12px 0 0', textContent: `Xem lại ${plan.length} camp sẽ thay đổi trong tài khoản ${acc.name}. Bỏ tick camp không muốn đổi.`}), wrap, el('div', {className: 'row', style: 'margin-top:10px'}, go, cancel), out);
+    box.append(el('p', {className: 'small muted', style: 'margin:12px 0 0', textContent: `Xem lại ${plan.length} camp sẽ thay đổi. Bỏ tick camp không muốn đổi.`}), wrap, el('div', {className: 'row', style: 'margin-top:10px'}, go, cancel), out);
     cancel.addEventListener('click', () => box.replaceChildren());
     go.addEventListener('click', async () => {
-      const token = wtok.get();
-      if (!token) { showTok(true); out.replaceChildren(el('p', {className: 'msg err', textContent: 'Chưa có mã quyền bật/tắt. Dán mã ở ô phía trên rồi thử lại.'})); return; }
+      const token = (await fbToken(true)) || wtok.get();
+      if (!token) { out.replaceChildren(el('p', {className: 'msg err', textContent: 'Chưa đăng nhập Facebook. Bấm “Đăng nhập Facebook” ở trên rồi thử lại.'})); return; }
       go.disabled = true; cancel.disabled = true;
-      const chosen = plan.filter((p) => wrap.querySelector(`input[data-i="${p.i}"]`).checked);
+      const chosen = plan.filter((p) => wrap.querySelector(`input[data-i="${CSS.escape(String(p.i))}"]`).checked);
       out.replaceChildren();
       for (const p of chosen) {
         const line = el('p', {className: 'msg', textContent: `${p.to === 'PAUSED' ? 'Đang tắt' : 'Đang bật'} “${p.c.campaign}”…`}); out.append(line);
@@ -1031,7 +1039,7 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
           const r = await fetch(`https://graph.facebook.com/${META_V()}/${p.c.id}`, {method: 'POST', body}).then((x) => x.json());
           if (r.error) throw new Error(r.error.error_user_msg || r.error.message);
           p.c.status = p.to === 'PAUSED' ? 'Đang tắt' : 'Đang chạy';
-          if (campTot[p.i]) campTot[p.i].status = p.c.status;
+          if (typeof p.i === 'number' && campTot[p.i]) campTot[p.i].status = p.c.status;
           line.className = 'msg res-ok'; line.textContent = `✓ Đã ${p.to === 'PAUSED' ? 'tắt' : 'bật'} “${p.c.campaign}”.`;
         } catch (e) { line.className = 'msg res-err'; line.textContent = `✗ Không ${p.to === 'PAUSED' ? 'tắt' : 'bật'} được “${p.c.campaign}”: ${e.message}`; }
       }
@@ -1045,6 +1053,46 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
     if (!acc) return;
     renderPlan(parseCommand($('cmdIn').value));
   });
+
+
+  // ---------------- đăng nhập Facebook (lấy quyền bật/tắt không cần dán mã) ----------------
+  const FB_APP = '1915751329586412', FB_SCOPE = 'ads_management,ads_read';
+  let fbReady = null, fbTok = '';
+  const fbState = (t, cls = '') => { const e = $('fbState'); e.className = 'small ' + (cls || 'muted'); e.textContent = t; };
+  function loadFB() {
+    if (fbReady) return fbReady;
+    fbReady = new Promise((res) => {
+      window.fbAsyncInit = () => { FB.init({appId: FB_APP, cookie: true, xfbml: false, version: META_V()}); res(true); };
+      const sc = document.createElement('script'); sc.src = 'https://connect.facebook.net/vi_VN/sdk.js'; sc.async = true; sc.crossOrigin = 'anonymous';
+      sc.onerror = () => res(false); document.head.append(sc);
+      setTimeout(() => res(!!window.FB), 8000);
+    });
+    return fbReady;
+  }
+  const hasPerm = async (t) => { try { const r = await fetch(`https://graph.facebook.com/${META_V()}/me/permissions?access_token=${encodeURIComponent(t)}`).then((x) => x.json()); return (r.data || []).some((p) => p.permission === 'ads_management' && p.status === 'granted'); } catch { return false; } };
+  async function fbToken(silent) {
+    if (!(await loadFB()) || !window.FB) return '';
+    const st = await new Promise((r) => FB.getLoginStatus(r, true));
+    if (st.status === 'connected' && await hasPerm(st.authResponse.accessToken)) { fbTok = st.authResponse.accessToken; return fbTok; }
+    if (silent) return '';
+    return '';
+  }
+  async function refreshFB() {
+    const t = await fbToken(true);
+    if (t) { fbState('✓ Đã đăng nhập Facebook – có thể bật/tắt camp.', 'res-ok'); $('fbLogin').textContent = 'Đã đăng nhập'; }
+    else if (wtok.get()) fbState('Đang dùng mã thủ công đã lưu.');
+    else fbState('Bấm “Đăng nhập Facebook” một lần để bật/tắt camp (không cần lấy mã).');
+  }
+  $('fbLogin').addEventListener('click', async () => {
+    fbState('Đang mở cửa sổ đăng nhập Facebook…');
+    if (!(await loadFB()) || !window.FB) { fbState('Không tải được Facebook (có thể bị chặn bởi trình chặn quảng cáo). Tắt trình chặn cho trang này rồi thử lại.', 'msg err'); return; }
+    FB.login(async (r) => {
+      if (r.authResponse && await hasPerm(r.authResponse.accessToken)) { fbTok = r.authResponse.accessToken; refreshFB(); }
+      else fbState('Chưa cấp quyền quản lý quảng cáo. Bấm lại và chọn “Tiếp tục”/cho phép quyền quảng cáo.', 'msg err');
+    }, {scope: FB_SCOPE, auth_type: 'rerequest', return_scopes: true});
+  });
+  document.querySelector('[data-tab="camp"], #tab-camp, button[data-view="camp"]')?.addEventListener('click', refreshFB);
+  setTimeout(refreshFB, 1500);
 
   // ---------------- data (encrypted static files) ----------------
   const b64 = (u8) => btoa(String.fromCharCode(...u8));
