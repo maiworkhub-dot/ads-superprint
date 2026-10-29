@@ -145,7 +145,7 @@ export async function run(env = process.env) {
       const addPage = (cid, pid) => { if (!cid || !pid) return; pid = String(pid); if (!pageOf.has(cid)) pageOf.set(cid, new Set()); pageOf.get(cid).add(pid); };
       for (const s of adsets) addPage(s.campaign_id, s.promoted_object?.page_id);
       const ads = await g.all(`act_${id}/ads`, { fields: 'campaign_id,creative{actor_id,object_story_spec{page_id},effective_object_story_id}', limit: '500' }).catch(() => []);
-      for (const ad of ads) { const cr = ad.creative || {}; const pid = cr.object_story_spec?.page_id || cr.actor_id || (cr.effective_object_story_id || '').split('_')[0] || null; addPage(ad.campaign_id, pid); if (pid && !adOfPage.has(pid)) adOfPage.set(pid, ad.id); }
+      for (const ad of ads) { const cr = ad.creative || {}; const pid = cr.object_story_spec?.page_id || cr.actor_id || (cr.effective_object_story_id || '').split('_')[0] || null; addPage(ad.campaign_id, pid); if (pid) { const l = adOfPage.get(pid) || []; if (l.length < 3) l.push(ad.id); adOfPage.set(pid, l); } }
       const adsetBudget = new Map();
       for (const s of adsets) if (s.effective_status === 'ACTIVE' && s.daily_budget) adsetBudget.set(s.campaign_id, (adsetBudget.get(s.campaign_id) || 0) + Number(s.daily_budget));
       const factor = ['VND', 'JPY', 'KRW', 'CLP', 'ISK', 'TWD', 'HUF', 'IDR', 'COP', 'PYG'].includes(acc.currency) ? 1 : 100; // ngân sách trả về theo đơn vị nhỏ nhất
@@ -245,21 +245,27 @@ export async function run(env = process.env) {
     }
   }
   // cách cuối: xem trước quảng cáo (chỉ cần ads_read) – trong khung xem trước có tên page
+  const fromPreview = (html, pid) => [
+    html.match(new RegExp(`facebook\\.com\\/(?:${pid}|[^"'/?]+)\\/?["'][^>]*>(?:<[^>]+>)*([^<]{2,80})<`, 'i'))?.[1],
+    html.match(/"page_name"\s*:\s*"([^"]+)"/)?.[1],
+    html.match(/aria-label="([^"]{2,80})"[^>]*role="link"/)?.[1],
+    html.match(/<strong[^>]*>(?:<[^>]+>)*([^<]{2,80})</)?.[1],
+    html.match(/<h[2-4][^>]*>(?:<[^>]+>)*([^<]{2,80})</)?.[1],
+  ].filter(Boolean).map((x) => dec(x.replace(/\\u([0-9a-f]{4})/gi, (_, h) => String.fromCharCode(parseInt(h, 16))))).find((x) => !bad.test(x));
   for (const pid of [...allPages].filter((p) => !pages[p] && adOfPage.has(p))) {
-    try {
-      const pv = await g.get(`${adOfPage.get(pid)}/previews`, { ad_format: 'DESKTOP_FEED_STANDARD' });
-      const src = dec((pv?.data?.[0]?.body || '').match(/src="([^"]+)"/)?.[1] || '');
-      if (!src) continue;
-      const html = await (await fetch(src, { headers: { 'user-agent': 'Mozilla/5.0 (Macintosh) Chrome/130', 'accept-language': 'vi,en' } })).text();
-      const cands = [
-        html.match(new RegExp(`facebook\\.com\\/(?:${pid}|[^"'/?]+)\\/?["'][^>]*>(?:<[^>]+>)*([^<]{2,80})<`, 'i'))?.[1],
-        html.match(/"page_name"\s*:\s*"([^"]+)"/)?.[1],
-        html.match(/aria-label="([^"]{2,80})"[^>]*role="link"/)?.[1],
-        html.match(/<strong[^>]*>(?:<[^>]+>)*([^<]{2,80})</)?.[1],
-      ].filter(Boolean).map((x) => dec(x.replace(/\\u([0-9a-f]{4})/gi, (_, h) => String.fromCharCode(parseInt(h, 16)))));
-      if (cands[0] && !bad.test(cands[0])) pages[pid] = cands[0];
-      else log(`  preview ${pid}: ${html.length}b ${JSON.stringify(cands).slice(0, 200)}`);
-    } catch (e) { log(`  preview ${pid} lỗi: ${String(e.message || e).slice(0, 120)}`); }
+    let last = '';
+    outer: for (const adId of adOfPage.get(pid)) for (const fmt of ['DESKTOP_FEED_STANDARD', 'MOBILE_FEED_STANDARD', 'INSTAGRAM_STANDARD']) {
+      try {
+        const pv = await g.get(`${adId}/previews`, { ad_format: fmt });
+        const src = dec((pv?.data?.[0]?.body || '').match(/src="([^"]+)"/)?.[1] || '');
+        if (!src) continue;
+        const html = await (await fetch(src, { headers: { 'user-agent': 'Mozilla/5.0 (Macintosh) Chrome/130', 'accept-language': 'vi,en' } })).text();
+        const name = fromPreview(html, pid);
+        if (name) { pages[pid] = name; break outer; }
+        last = html.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/g, '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').slice(0, 160);
+      } catch (e) { last = String(e.message || e).slice(0, 120); }
+    }
+    if (!pages[pid]) log(`  preview ${pid}: ${last}`);
   }
   log(`Fanpage: ${allPages.size} page, đọc được tên ${Object.keys(pages).length}. Thiếu: ${[...allPages].filter((p) => !pages[p]).join(', ') || 'không'}`);
   const out = { synced_at: new Date().toISOString(), token_expires: tokenExpires, api_version: version, pages, accounts: outAccounts };
