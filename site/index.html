@@ -176,6 +176,23 @@ td.good { color: var(--good); font-weight: 600; } td.bad { color: var(--bad); fo
 .msg.ok { color: var(--good); } .msg.err { color: var(--bad); }
 ol.steps { margin: 0; padding-left: 1.2rem; display: grid; gap: 3px; font-size: .86rem; color: var(--muted); }
 .ai-out { white-space: pre-wrap; margin-top: 12px; font-size: .88rem; padding: 14px 16px; border-radius: var(--r-sm); background: var(--lilac-soft); }
+/* per-camp table in report */
+.rp-camps { overflow-x: auto; margin: 0 -4px; }
+.rp-camps table { font-size: .78rem; }
+.rp-camps th { position: static; background: none; padding: 6px 6px; font-size: .68rem; border-bottom: 1px dashed var(--line); }
+.rp-camps td { padding: 6px 6px; border-top: 1px solid var(--line); }
+.rp-camps td.cn { min-width: 150px; max-width: 220px; overflow-wrap: anywhere; font-weight: 500; }
+.rp-camps tr.tot td { font-weight: 600; border-top: 1px dashed var(--muted); }
+.rp-camps .pg { display: block; font-weight: 400; color: var(--muted); font-size: .7rem; }
+/* command box */
+.cmd textarea { font: inherit; width: 100%; min-height: 70px; resize: vertical; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-sm); padding: 10px 14px; }
+.cmd .hint { font-size: .8rem; color: var(--muted); margin: 6px 0 0; }
+.plan { display: grid; gap: 6px; margin-top: 12px; }
+.plan label { display: flex; gap: 10px; align-items: center; padding: 8px 12px; border: 1px solid var(--line); border-radius: var(--r-sm); font-size: .86rem; }
+.plan label input { accent-color: var(--rose); }
+.plan .nm { flex: 1; overflow-wrap: anywhere; }
+.res-ok { color: var(--good); } .res-err { color: var(--bad); }
+input[type=password] { font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 9px 16px; width: 100%; min-height: 42px; }
 @media (max-width: 560px) {
   .rec { grid-template-columns: 1fr; }
   .card, .report { padding: 18px 16px; }
@@ -208,6 +225,7 @@ ol.steps { margin: 0; padding-left: 1.2rem; display: grid; gap: 3px; font-size: 
     <div class="pickers">
       <div class="pk"><label for="bm">Business (BM)</label><select id="bm"><option>Đang tải…</option></select></div>
       <div class="pk"><label for="acct">Tài khoản quảng cáo</label><select id="acct"><option>Đang tải…</option></select></div>
+      <div class="pk"><label for="pageSel">Fanpage</label><select id="pageSel"><option value="">Tất cả fanpage</option></select></div>
     </div>
   </header>
 
@@ -216,7 +234,8 @@ ol.steps { margin: 0; padding-left: 1.2rem; display: grid; gap: 3px; font-size: 
   <nav class="tabs" role="tablist" aria-label="Các mục">
     <button class="tab" role="tab" id="t-bao-cao" data-view="bao-cao" aria-selected="true">Báo cáo ngày</button>
     <button class="tab" role="tab" id="t-dashboard" data-view="dashboard" aria-selected="false">Dashboard</button>
-    <button class="tab" role="tab" id="t-camp" data-view="camp" aria-selected="false">Camp</button>
+    <button class="tab" role="tab" id="t-camp" data-view="camp" aria-selected="false">Camp &amp; lệnh</button>
+    <button class="tab" role="tab" id="t-fanpage" data-view="fanpage" aria-selected="false">Fanpage</button>
     <button class="tab" role="tab" id="t-de-xuat" data-view="de-xuat" aria-selected="false">Đề xuất</button>
   </nav>
 
@@ -236,13 +255,11 @@ ol.steps { margin: 0; padding-left: 1.2rem; display: grid; gap: 3px; font-size: 
         <div class="rp-big">
           <div><div class="k">Chi tiêu</div><div class="v" id="rpSpend">—</div><div class="d" id="rpSpendD"></div></div>
           <div><div class="k" id="rpResK">Kết quả</div><div class="v" id="rpRes">—</div><div class="d" id="rpResD"></div></div>
-          <div><div class="k">Giá / kết quả</div><div class="v" id="rpCpr">—</div><div class="d" id="rpCprD"></div></div>
+          <div><div class="k">CPL (giá / kết quả)</div><div class="v" id="rpCpr">—</div><div class="d" id="rpCprD"></div></div>
         </div>
-        <div class="rp-small">
-          <div><div class="k">CTR</div><div class="v" id="rpCtr">—</div></div>
-          <div><div class="k">CPM</div><div class="v" id="rpCpm">—</div></div>
-          <div><div class="k">CPC</div><div class="v" id="rpCpc">—</div></div>
-          <div><div class="k">Hiển thị</div><div class="v" id="rpImp">—</div></div>
+        <div class="rp-sec"><h4 style="color:var(--ink)">Chỉ số từng camp</h4>
+          <div class="rp-camps"><table><thead><tr><th>Camp</th><th class="r">Chi tiêu</th><th class="r">KQ</th><th class="r">CPL</th><th class="r">CTR</th><th class="r">CPM</th><th class="r">CPC</th><th class="r">Hiển thị</th></tr></thead><tbody id="rpCamps"></tbody></table></div>
+          <p class="small muted" style="margin:6px 0 0">CPL = chi phí mỗi kết quả (lead/tin nhắn) · CPC = chi phí mỗi lượt click · CPM = chi phí mỗi 1.000 lượt hiển thị</p>
         </div>
         <div class="rp-sec good"><h4>Hiệu quả</h4><ul id="rpGood"></ul></div>
         <div class="rp-sec bad"><h4>Chưa hiệu quả</h4><ul id="rpBad"></ul></div>
@@ -333,6 +350,17 @@ ol.steps { margin: 0; padding-left: 1.2rem; display: grid; gap: 3px; font-size: 
 
   <!-- ===== Camp ===== -->
   <section id="v-camp" class="view" hidden>
+    <div class="card cmd" id="cmdCard" style="margin-bottom:20px">
+      <div class="card-head"><h2>Ra lệnh bật / tắt camp</h2><button class="linkbtn" id="cmdTokBtn" type="button">Mã quyền bật/tắt</button></div>
+      <div id="cmdTok" hidden>
+        <p class="note">Để bật/tắt camp, trang cần một mã Meta có quyền <b>ads_management</b>. Mã chỉ lưu trong trình duyệt này, không gửi đi đâu ngoài Meta. Lấy mã: Graph API Explorer → app Ads Superprint → thêm quyền ads_management, ads_read → Generate Access Token → ⓘ → Mã truy cập mở rộng → copy.</p>
+        <div class="row"><input type="password" id="wtok" placeholder="Dán mã truy cập Meta (EAA…)" aria-label="Mã truy cập Meta có quyền ads_management" autocomplete="off" style="flex:1;min-width:200px"><button class="btn-main" id="wtokSave" type="button">Lưu mã</button><button class="btn-soft" id="wtokDel" type="button">Xoá mã</button></div>
+        <p class="msg" id="wtokMsg" aria-live="polite"></p>
+      </div>
+      <textarea id="cmdIn" placeholder="Ví dụ: tắt Test tổng 1, Test tổng 2; bật Tin nhắn T6&#10;Hoặc: tắt tất cả camp đang chạy" aria-label="Lệnh bật/tắt camp"></textarea>
+      <p class="hint">Gõ <b>tắt</b> hoặc <b>bật</b> + tên camp (gõ một phần tên là đủ), nhiều camp cách nhau bằng dấu phẩy, nhiều lệnh cách nhau bằng dấu chấm phẩy hoặc xuống dòng. Nhấn <b>Enter</b> để xem trước (Shift + Enter để xuống dòng). Lệnh chỉ áp dụng cho tài khoản (và fanpage) đang chọn.</p>
+      <div id="cmdPlan"></div>
+    </div>
     <div class="card">
       <div class="card-head"><h2>Tất cả camp</h2><span class="muted small" id="campCount"></span></div>
       <p class="note">Trạng thái hiện tại theo lần cập nhật gần nhất, cộng dồn toàn bộ lịch sử đã lưu.</p>
@@ -344,6 +372,18 @@ ol.steps { margin: 0; padding-left: 1.2rem; display: grid; gap: 3px; font-size: 
       <div class="tbl"><table id="tCamp"><thead><tr>
         <th>Camp</th><th>Trạng thái</th><th class="r">Ngân sách/ngày</th><th class="r">Tổng chi</th><th class="r">Kết quả</th><th class="r">Giá/kết quả</th><th>Loại kết quả</th><th class="r">Chạy lần cuối</th>
       </tr></thead><tbody></tbody></table></div>
+    </div>
+  </section>
+
+  <!-- ===== Fanpage ===== -->
+  <section id="v-fanpage" class="view" hidden>
+    <div class="card">
+      <div class="card-head"><h2>Fanpage đang chạy quảng cáo</h2><span class="muted small" id="fpNote"></span></div>
+      <p class="note">Mỗi fanpage đang có camp ở BM và tài khoản quảng cáo nào. Số liệu chi tiêu tính 30 ngày gần nhất.</p>
+      <div class="tools"><select id="fpSel" aria-label="Chọn fanpage" style="max-width:420px"></select></div>
+      <div class="tbl"><table id="tFp"><thead><tr><th>BM</th><th>Tài khoản</th><th class="r">Camp đang bật</th><th class="r">Tổng camp</th><th class="r">Chi 30 ngày</th><th class="r">Kết quả 30 ngày</th><th class="r">CPL</th></tr></thead><tbody></tbody></table></div>
+      <h3 style="margin:20px 0 10px">Camp đang bật của fanpage này</h3>
+      <div class="tbl"><table id="tFpCamps"><thead><tr><th>Camp</th><th>Tài khoản</th><th class="r">Ngân sách/ngày</th><th class="r">Chi 30 ngày</th><th class="r">Kết quả</th><th class="r">CPL</th></tr></thead><tbody></tbody></table></div>
     </div>
   </section>
 
@@ -372,6 +412,7 @@ ol.steps { margin: 0; padding-left: 1.2rem; display: grid; gap: 3px; font-size: 
   const hash = (s) => { let h = 5381; for (const c of String(s)) h = ((h << 5) + h + c.codePointAt(0)) >>> 0; return h.toString(36); };
   const RES_TYPES = new Set(['lead', 'message']);
   const resLabel = (t) => t === 'lead' ? 'lead' : t === 'message' ? 'tin nhắn' : t === 'reach' ? 'tiếp cận' : t ? t : '—';
+  const norm = (x) => String(x ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase().trim();
   const isRunning = (c) => /đang chạy|active/i.test(c.status || '');
 
   // date helpers (YYYY-MM-DD strings, UTC math)
@@ -383,6 +424,10 @@ ol.steps { margin: 0; padding-left: 1.2rem; display: grid; gap: 3px; font-size: 
   const WD = ['Chủ nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
 
   let accounts = [], acc = null, KEY = null, INDEX = null, MANI = {files: {}}, loadSeq = 0;
+  let rawMonths = [], pageFilter = '', visible = null; const monthCache = new Map();
+  const pageName = (pid) => pid === 'none' ? 'Chưa rõ fanpage' : (INDEX?.pages?.[pid] || `Page ${pid}`);
+  const campPages = (c) => (c.page_ids && c.page_ids.length ? c.page_ids : ['none']);
+  const isVis = (ci) => !visible || visible.has(ci);
   let daily = new Map();   // date -> {spend, imp, clicks, res, camps: Map(ci -> row)}
   let campTot = [];        // per campaign all-time aggregates
   let reportDate = null, range = {from: null, to: null, preset: '30'};
@@ -396,7 +441,7 @@ ol.steps { margin: 0; padding-left: 1.2rem; display: grid; gap: 3px; font-size: 
       for (const r of m.rows || []) {
         const [dd, ci, spend, imp, reach, clicks, res] = r;
         const date = `${m.month}-${String(dd).padStart(2, '0')}`;
-        const c = camps[ci]; if (!c) continue;
+        const c = camps[ci]; if (!c || !isVis(ci)) continue;
         const counts = RES_TYPES.has(c.result_type);
         let d = daily.get(date);
         if (!d) { d = {spend: 0, imp: 0, clicks: 0, res: 0, resSpend: 0, camps: new Map()}; daily.set(date, d); }
@@ -479,8 +524,9 @@ ol.steps { margin: 0; padding-left: 1.2rem; display: grid; gap: 3px; font-size: 
     if (!sug.length) sug.push('Các camp đang ổn, giữ nguyên ngân sách.');
     const mainType = (() => { const c = {}; for (const p of resCamps) c[camps[p.ci].result_type] = (c[camps[p.ci].result_type] || 0) + p.res; const k = Object.keys(c).sort((a, b) => c[b] - c[a])[0]; return k || (Array.from(bench.per.values()).find((p) => p.counts) ? camps[Array.from(bench.per.values()).find((p) => p.counts).ci].result_type : 'lead'); })();
     const isLatest = date >= lastDate();
-    const runNow = camps.filter(isRunning).length;
-    return {today, prev, bench, avg, per, good, bad, sug: sug.slice(0, 3), mainType, isLatest, runNow, total: camps.length};
+    const visCamps = camps.filter((c, i) => isVis(i));
+    const runNow = visCamps.filter(isRunning).length;
+    return {today, prev, bench, avg, per, good, bad, sug: sug.slice(0, 3), mainType, isLatest, runNow, total: visCamps.length};
   }
 
   function renderReport() {
@@ -508,7 +554,20 @@ ol.steps { margin: 0; padding-left: 1.2rem; display: grid; gap: 3px; font-size: 
     const dS = delta($('rpSpendD'), t.spend, p.spend, true);
     const dR = delta($('rpResD'), t.res, p.res, true);
     const dC = delta($('rpCprD'), t.cpr, p.cpr, false);
-    $('rpCtr').textContent = pct(t.ctr); $('rpCpm').textContent = vnd(t.cpm); $('rpCpc').textContent = vnd(t.cpc); $('rpImp').textContent = num(t.imp);
+    // bảng chỉ số từng camp
+    const rows = a.per.filter((x) => x.spend > 0 || x.res > 0).sort((x, y) => y.spend - x.spend);
+    const cpl = (x) => x.counts && x.res ? x.spend / x.res : null;
+    const tb = $('rpCamps'); tb.replaceChildren();
+    const mkRow = (name, sub, x, cls) => el('tr', {className: cls || ''},
+      el('td', {className: 'cn'}, name, sub ? el('span', {className: 'pg', textContent: sub}) : null),
+      el('td', {className: 'r', textContent: vndShort(x.spend)}), el('td', {className: 'r', textContent: x.counts === false ? '—' : num(x.res)}),
+      el('td', {className: 'r' + (cpl(x) && a.avg ? (cpl(x) >= a.avg * 1.4 ? ' bad' : cpl(x) <= a.avg ? ' good' : '') : ''), textContent: x.counts === false ? '—' : vndShort(cpl(x))}),
+      el('td', {className: 'r', textContent: pct(x.imp ? x.clicks / x.imp : null)}), el('td', {className: 'r', textContent: vndShort(x.imp ? x.spend / x.imp * 1000 : null)}),
+      el('td', {className: 'r', textContent: vndShort(x.clicks ? x.spend / x.clicks : null)}), el('td', {className: 'r', textContent: num(x.imp)}));
+    if (!rows.length) tb.append(el('tr', {}, el('td', {colSpan: 8, className: 'muted', textContent: 'Không có camp nào chạy trong ngày.'})));
+    for (const x of rows) { const c = acc.campaigns[x.ci]; tb.append(mkRow(c.campaign, campPages(c).map(pageName).join(', '), x)); }
+    if (rows.length > 1) tb.append(mkRow('Tổng', '', {spend: t.spend, res: t.res, counts: true, imp: t.imp, clicks: t.clicks, resSpendOverride: true, ...{}}, 'tot'));
+    if (rows.length > 1) { const last = tb.lastChild; last.children[3].textContent = vndShort(t.cpr); last.children[3].className = 'r'; }
     const list = (ul, items, fmt, none) => { ul.replaceChildren(); if (!items.length) { ul.append(el('li', {className: 'none', textContent: none})); return; } for (const it of items) ul.append(fmt(it)); };
     const campLi = (x) => el('li', {}, el('span', {className: 'n', textContent: cname(x.ci)}), el('span', {className: 'm', textContent: x.res ? `${num(x.res)} · ${vnd(x.spend / x.res)}` : `0 kết quả · chi ${vnd(x.spend)}`}));
     list($('rpGood'), a.good, campLi, t.spend > 0 ? 'Chưa có camp nào rẻ hơn mức trung bình.' : 'Không có dữ liệu trong ngày.');
@@ -522,7 +581,8 @@ ol.steps { margin: 0; padding-left: 1.2rem; display: grid; gap: 3px; font-size: 
     lines.push(`• Camp có chi tiêu: ${ran} | Không chi tiêu: ${a.total - ran}${a.isLatest ? ` | Đang bật: ${a.runNow}` : ''}`);
     lines.push(`• Chi tiêu: ${vnd(t.spend)}${dS ? ` (${dS} so với hôm trước)` : ''}`);
     lines.push(`• Kết quả: ${num(t.res)} ${resWord}${t.cpr ? ` | Giá/${resWord}: ${vnd(t.cpr)}` : ''}${a.avg ? ` (TB 30 ngày ${vnd(a.avg)})` : ''}`);
-    if (t.imp) lines.push(`• CTR ${pct(t.ctr)} | CPM ${vnd(t.cpm)} | CPC ${vnd(t.cpc)}`);
+    if (t.imp) lines.push(`• Tổng: CTR ${pct(t.ctr)} | CPM ${vnd(t.cpm)} | CPC ${vnd(t.cpc)} | ${num(t.imp)} hiển thị`);
+    if (rows.length) { lines.push('Chi tiết từng camp:'); for (const x of rows) lines.push(`- ${cname(x.ci)}: chi ${vnd(x.spend)}${x.counts ? ` | ${num(x.res)} ${resLabel(acc.campaigns[x.ci].result_type)} | CPL ${vnd(cpl(x))}` : ''} | CTR ${pct(x.imp ? x.clicks / x.imp : null)} | CPM ${vnd(x.imp ? x.spend / x.imp * 1000 : null)} | CPC ${vnd(x.clicks ? x.spend / x.clicks : null)}`); }
     if (a.good.length) lines.push(`✔ Hiệu quả: ${a.good.map((x) => `${cname(x.ci)} (${vnd(x.spend / x.res)})`).join('; ')}`);
     if (a.bad.length) lines.push(`✘ Chưa hiệu quả: ${a.bad.map((x) => `${cname(x.ci)} (${x.res ? vnd(x.spend / x.res) : '0 kết quả'})`).join('; ')}`);
     lines.push(`→ Đề xuất: ${a.sug.join(' ')}`);
@@ -694,17 +754,17 @@ ol.steps { margin: 0; padding-left: 1.2rem; display: grid; gap: 3px; font-size: 
   function renderCamps() {
     if (!acc) return;
     const q = $('cq').value.trim().toLowerCase(), onlyRun = $('cOnlyRun').checked, onlySpend = $('cOnlySpend').checked;
-    let rows = campTot.map((c, ci) => ({...c, ci}));
+    let rows = campTot.map((c, ci) => ({...c, ci})).filter((c) => isVis(c.ci));
     if (onlyRun) rows = rows.filter(isRunning);
     if (onlySpend) rows = rows.filter((c) => c.spend > 0);
     if (q) rows = rows.filter((c) => c.campaign.toLowerCase().includes(q));
     rows.sort((a, b) => (isRunning(b) - isRunning(a)) || (b.last || '').localeCompare(a.last || '') || b.spend - a.spend);
-    $('campCount').textContent = `${rows.length} / ${campTot.length} camp · ${campTot.filter(isRunning).length} đang bật`;
+    $('campCount').textContent = `${rows.length} / ${campTot.filter((c, i) => isVis(i)).length} camp · ${campTot.filter((c, i) => isVis(i) && isRunning(c)).length} đang bật`;
     const tb = $('tCamp').tBodies[0]; tb.replaceChildren();
     if (!rows.length) tb.append(el('tr', {}, el('td', {colSpan: 8, className: 'muted', textContent: 'Không có camp phù hợp bộ lọc.'})));
     for (const c of rows) {
       const counts = RES_TYPES.has(c.result_type);
-      tb.append(el('tr', {}, el('td', {className: 'cname', textContent: c.campaign}),
+      tb.append(el('tr', {}, el('td', {className: 'cname'}, c.campaign, el('span', {className: 'pg small muted', style: 'display:block;font-weight:400', textContent: campPages(c).map(pageName).join(', ')})),
         el('td', {}, el('span', {className: 'chip ' + (isRunning(c) ? 'good' : 'mute'), textContent: c.status || '—'})),
         el('td', {className: 'r', textContent: c.daily_budget ? vnd(c.daily_budget) : '—'}),
         el('td', {className: 'r', textContent: vnd(c.spend)}),
@@ -749,7 +809,7 @@ ol.steps { margin: 0; padding-left: 1.2rem; display: grid; gap: 3px; font-size: 
   });
 
   // ---------------- views ----------------
-  const VIEWS = ['bao-cao', 'dashboard', 'camp', 'de-xuat'];
+  const VIEWS = ['bao-cao', 'dashboard', 'camp', 'fanpage', 'de-xuat'];
   function show(v) {
     if (!VIEWS.includes(v)) v = 'bao-cao';
     for (const x of VIEWS) { $('v-' + x).hidden = x !== v; $('t-' + x).setAttribute('aria-selected', String(x === v)); }
@@ -757,6 +817,7 @@ ol.steps { margin: 0; padding-left: 1.2rem; display: grid; gap: 3px; font-size: 
     renderView(v);
   }
   function renderView(v = VIEWS.find((x) => !$('v-' + x).hidden)) {
+    if (v === 'fanpage') { renderFanpage(); return; }
     if (!acc) return;
     if (v === 'bao-cao') renderReport();
     else if (v === 'dashboard') { if (!range.from) setRange(range.preset || '30'); else renderDashboard(); }
@@ -797,13 +858,15 @@ ol.steps { margin: 0; padding-left: 1.2rem; display: grid; gap: 3px; font-size: 
     store.set('ads.acct', id);
     setSyncLine();
     if (changed) {
+      pageFilter = ''; visible = null; fillPages();
       daily = new Map(); campTot = (acc.campaigns || []).map((c) => ({...c, spend: 0, res: 0, last: null}));
       reportDate = null; range = {from: null, to: null, preset: range.preset || '30'};
       const seq = ++loadSeq;
       $('sync').textContent = 'Đang tải số liệu…';
       Promise.all((acc.months || []).map((mo) => loadEnc(`data/days/${id}__${mo}.json`).catch(() => null))).then((docs) => {
         if (seq !== loadSeq) return;
-        buildFromMonths(docs.filter(Boolean));
+        rawMonths = docs.filter(Boolean); monthCache.set(id, rawMonths);
+        buildFromMonths(rawMonths);
         reportDate = lastDate();
         setSyncLine();
         if (range.from) setRange(range.preset === 'custom' ? '30' : range.preset);
@@ -826,6 +889,162 @@ ol.steps { margin: 0; padding-left: 1.2rem; display: grid; gap: 3px; font-size: 
     if (INDEX?.synced_at && Date.now() - new Date(INDEX.synced_at) > 26 * 3600e3) w.push('Đã hơn một ngày trang chưa tự cập nhật. Kiểm tra tab Actions trên GitHub.');
     $('warn').hidden = !w.length; $('warn').textContent = w.join(' ');
   }
+
+  // ---------------- fanpage filter (account views) ----------------
+  function fillPages() {
+    const sel = $('pageSel'); const cnt = new Map();
+    for (const c of acc?.campaigns || []) for (const p of campPages(c)) cnt.set(p, (cnt.get(p) || 0) + 1);
+    const opts = [...cnt.entries()].sort((a, b) => b[1] - a[1]);
+    sel.replaceChildren(el('option', {value: '', textContent: `Tất cả fanpage (${opts.length})`}), ...opts.map(([p, n]) => el('option', {value: p, textContent: `${pageName(p)} · ${n} camp`})));
+    sel.value = pageFilter;
+  }
+  $('pageSel').addEventListener('change', (e) => {
+    pageFilter = e.target.value;
+    visible = pageFilter ? new Set((acc.campaigns || []).map((c, i) => campPages(c).includes(pageFilter) ? i : -1).filter((i) => i >= 0)) : null;
+    buildFromMonths(rawMonths);
+    if (range.from) renderDashboard();
+    renderView();
+  });
+
+  // ---------------- fanpage overview (all accounts) ----------------
+  async function monthsFor(a, from) {
+    const need = (a.months || []).filter((m) => m >= from.slice(0, 7));
+    let docs = monthCache.get(a.id);
+    if (!docs || need.some((m) => !docs.some((d) => d.month === m))) {
+      const got = await Promise.all(need.map((mo) => loadEnc(`data/days/${a.id}__${mo}.json`).catch(() => null)));
+      docs = [...(docs || []).filter((d) => !need.includes(d.month)), ...got.filter(Boolean)];
+      monthCache.set(a.id, docs);
+    }
+    return docs;
+  }
+  let fpSeq = 0;
+  async function renderFanpage() {
+    const sel = $('fpSel'); const pages = new Map();
+    for (const a of accounts) for (const c of a.campaigns || []) for (const p of campPages(c)) { if (!pages.has(p)) pages.set(p, {run: 0, total: 0}); const x = pages.get(p); x.total++; if (isRunning(c)) x.run++; }
+    const list = [...pages.entries()].sort((a, b) => b[1].run - a[1].run || b[1].total - a[1].total);
+    const keep = sel.value || list[0]?.[0] || '';
+    sel.replaceChildren(...list.map(([p, x]) => el('option', {value: p, textContent: `${pageName(p)} — ${x.run} camp đang bật / ${x.total} camp`})));
+    sel.value = keep;
+    $('fpNote').textContent = `${list.length} fanpage · ${accounts.length} tài khoản`;
+    const pid = sel.value, seq = ++fpSeq;
+    const tb = $('tFp').tBodies[0], tc = $('tFpCamps').tBodies[0];
+    tb.replaceChildren(el('tr', {}, el('td', {colSpan: 7, className: 'muted', textContent: 'Đang tải…'}))); tc.replaceChildren();
+    const rows = [], camps = [];
+    for (const a of accounts) {
+      const idx = (a.campaigns || []).map((c, i) => campPages(c).includes(pid) ? i : -1).filter((i) => i >= 0);
+      if (!idx.length) continue;
+      const to = a.synced_through || S(new Date()), from = addDays(to, -29);
+      const docs = await monthsFor(a, from);
+      if (seq !== fpSeq) return;
+      const per = new Map(idx.map((i) => [i, {spend: 0, res: 0}]));
+      for (const m of docs) for (const r of m.rows || []) { const d = `${m.month}-${String(r[0]).padStart(2, '0')}`; if (d < from || d > to || !per.has(r[1])) continue; const x = per.get(r[1]); x.spend += r[2]; if (RES_TYPES.has(a.campaigns[r[1]].result_type)) { x.res += r[6]; x.rs = (x.rs || 0) + r[2]; } }
+      let spend = 0, res = 0, rs = 0;
+      for (const [i, x] of per) { spend += x.spend; res += x.res; rs += x.rs || 0; const c = a.campaigns[i]; if (isRunning(c)) camps.push({c, a, ...x}); }
+      rows.push({a, run: idx.filter((i) => isRunning(a.campaigns[i])).length, total: idx.length, spend, res, cpl: res ? rs / res : null});
+    }
+    tb.replaceChildren();
+    rows.sort((x, y) => y.run - x.run || y.spend - x.spend);
+    if (!rows.length) tb.append(el('tr', {}, el('td', {colSpan: 7, className: 'muted', textContent: 'Không có dữ liệu.'})));
+    for (const r of rows) {
+      const tr = el('tr', {}, el('td', {textContent: r.a.bm_name || '—'}), el('td', {className: 'cname', textContent: r.a.name}), el('td', {className: 'r', textContent: num(r.run)}), el('td', {className: 'r', textContent: num(r.total)}),
+        el('td', {className: 'r', textContent: vnd(r.spend)}), el('td', {className: 'r', textContent: num(r.res)}), el('td', {className: 'r', textContent: vnd(r.cpl)}));
+      tr.style.cursor = 'pointer';
+      tr.addEventListener('click', () => { $('bm').value = r.a.bm_id || 'none'; fillAcct(); $('acct').value = r.a.id; selectAcct(r.a.id); setTimeout(() => { $('pageSel').value = pid; $('pageSel').dispatchEvent(new Event('change')); }, 600); show('bao-cao'); });
+      tb.append(tr);
+    }
+    camps.sort((x, y) => y.spend - x.spend);
+    if (!camps.length) tc.append(el('tr', {}, el('td', {colSpan: 6, className: 'muted', textContent: 'Fanpage này hiện không có camp nào đang bật.'})));
+    for (const x of camps) tc.append(el('tr', {}, el('td', {className: 'cname', textContent: x.c.campaign}), el('td', {textContent: x.a.name}), el('td', {className: 'r', textContent: x.c.daily_budget ? vnd(x.c.daily_budget) : '—'}),
+      el('td', {className: 'r', textContent: vnd(x.spend)}), el('td', {className: 'r', textContent: RES_TYPES.has(x.c.result_type) ? num(x.res) : '—'}), el('td', {className: 'r', textContent: vnd(x.res ? (x.rs || 0) / x.res : null)})));
+  }
+  $('fpSel').addEventListener('change', renderFanpage);
+
+  // ---------------- command box: bật / tắt camp ----------------
+  const META_V = () => INDEX?.api_version || 'v23.0';
+  const wtok = { get() { try { return localStorage.getItem('ads.wtoken') || ''; } catch { return ''; } }, set(v) { try { v ? localStorage.setItem('ads.wtoken', v) : localStorage.removeItem('ads.wtoken'); } catch {} } };
+  const showTok = (open) => { $('cmdTok').hidden = !open; };
+  $('cmdTokBtn').addEventListener('click', () => showTok($('cmdTok').hidden));
+  $('wtokSave').addEventListener('click', async () => {
+    const v = $('wtok').value.trim(), m = $('wtokMsg');
+    if (!/^EAA/.test(v)) { m.className = 'msg err'; m.textContent = 'Mã không đúng dạng (phải bắt đầu bằng EAA).'; return; }
+    m.className = 'msg'; m.textContent = 'Đang kiểm tra mã…';
+    try {
+      const r = await fetch(`https://graph.facebook.com/${META_V()}/me/permissions?access_token=${encodeURIComponent(v)}`).then((x) => x.json());
+      if (r.error) throw new Error(r.error.message);
+      const ok = (r.data || []).some((p) => p.permission === 'ads_management' && p.status === 'granted');
+      if (!ok) { m.className = 'msg err'; m.textContent = 'Mã này chưa có quyền ads_management. Hãy thêm quyền đó khi tạo mã.'; return; }
+      wtok.set(v); $('wtok').value = ''; m.className = 'msg ok'; m.textContent = 'Đã lưu mã trong trình duyệt này. Có thể ra lệnh bật/tắt.';
+      setTimeout(() => showTok(false), 1500);
+    } catch (e) { m.className = 'msg err'; m.textContent = 'Meta từ chối mã: ' + e.message; }
+  });
+  $('wtokDel').addEventListener('click', () => { wtok.set(''); $('wtokMsg').className = 'msg'; $('wtokMsg').textContent = 'Đã xoá mã khỏi trình duyệt.'; });
+
+  function parseCommand(text) {
+    const plan = [], misses = [];
+    const camps = (acc?.campaigns || []).map((c, i) => ({c, i})).filter((x) => isVis(x.i) && x.c.id);
+    for (const clause of text.split(/[;\n]+|\s+rồi\s+/i).map((x) => x.trim()).filter(Boolean)) {
+      const n = norm(clause);
+      const m = n.match(/^(tat|dung|tam dung|pause|off|bat|mo|chay|resume|on|active)\b\s*(cac\s+|cam\s+|camp\s+|campaign\s+)*/);
+      if (!m) { misses.push(`Không hiểu lệnh: “${clause}” (bắt đầu bằng “tắt” hoặc “bật”).`); continue; }
+      const to = /^(tat|dung|tam dung|pause|off)/.test(m[1]) ? 'PAUSED' : 'ACTIVE';
+      const rest = clause.slice(m[0].length).trim();
+      const terms = rest.split(/\s*,\s*|\s+và\s+|\s+va\s+/i).map((x) => x.trim().replace(/^["“”']|["“”']$/g, '')).filter(Boolean);
+      if (!terms.length) { misses.push(`Thiếu tên camp trong lệnh “${clause}”.`); continue; }
+      for (const t of terms) {
+        const nt = norm(t);
+        let hits;
+        if (/^(tat ca|het|all)\b/.test(nt)) {
+          const extra = nt.replace(/^(tat ca|het|all)\s*(cac\s+)?(cam|camp|campaign)?\s*/, '');
+          hits = camps.filter((x) => (to === 'PAUSED' ? isRunning(x.c) : !isRunning(x.c)) && (!extra || /^dang (chay|bat)$/.test(extra) || norm(x.c.campaign).includes(extra.replace(/^co (chu|ten)\s+/, ''))));
+        } else hits = camps.filter((x) => norm(x.c.campaign).includes(nt));
+        if (!hits.length) { misses.push(`Không tìm thấy camp nào có tên chứa “${t}”.`); continue; }
+        for (const h of hits) if (!plan.some((p) => p.i === h.i)) plan.push({i: h.i, c: h.c, to, term: t, many: hits.length > 1});
+      }
+    }
+    return {plan, misses};
+  }
+  function renderPlan({plan, misses}) {
+    const box = $('cmdPlan'); box.replaceChildren();
+    for (const m of misses) box.append(el('p', {className: 'msg err', textContent: m}));
+    if (!plan.length) return;
+    const wrap = el('div', {className: 'plan'});
+    for (const p of plan) {
+      const cb = el('input', {type: 'checkbox', checked: !(p.to === 'PAUSED' ? !isRunning(p.c) : isRunning(p.c))}); cb.dataset.i = p.i;
+      wrap.append(el('label', {}, cb, el('span', {className: 'chip ' + (p.to === 'PAUSED' ? 'bad' : 'good'), textContent: p.to === 'PAUSED' ? 'Tắt' : 'Bật'}), el('span', {className: 'nm', textContent: p.c.campaign}),
+        el('span', {className: 'small muted', textContent: `hiện: ${p.c.status || '—'}`})));
+    }
+    const go = el('button', {className: 'btn-main', type: 'button', textContent: `Xác nhận thực hiện`});
+    const cancel = el('button', {className: 'btn-soft', type: 'button', textContent: 'Huỷ'});
+    const out = el('div', {className: 'plan'});
+    box.append(el('p', {className: 'small muted', style: 'margin:12px 0 0', textContent: `Xem lại ${plan.length} camp sẽ thay đổi trong tài khoản ${acc.name}. Bỏ tick camp không muốn đổi.`}), wrap, el('div', {className: 'row', style: 'margin-top:10px'}, go, cancel), out);
+    cancel.addEventListener('click', () => box.replaceChildren());
+    go.addEventListener('click', async () => {
+      const token = wtok.get();
+      if (!token) { showTok(true); out.replaceChildren(el('p', {className: 'msg err', textContent: 'Chưa có mã quyền bật/tắt. Dán mã ở ô phía trên rồi thử lại.'})); return; }
+      go.disabled = true; cancel.disabled = true;
+      const chosen = plan.filter((p) => wrap.querySelector(`input[data-i="${p.i}"]`).checked);
+      out.replaceChildren();
+      for (const p of chosen) {
+        const line = el('p', {className: 'msg', textContent: `${p.to === 'PAUSED' ? 'Đang tắt' : 'Đang bật'} “${p.c.campaign}”…`}); out.append(line);
+        try {
+          const body = new URLSearchParams({status: p.to, access_token: token});
+          const r = await fetch(`https://graph.facebook.com/${META_V()}/${p.c.id}`, {method: 'POST', body}).then((x) => x.json());
+          if (r.error) throw new Error(r.error.error_user_msg || r.error.message);
+          p.c.status = p.to === 'PAUSED' ? 'Đang tắt' : 'Đang chạy';
+          if (campTot[p.i]) campTot[p.i].status = p.c.status;
+          line.className = 'msg res-ok'; line.textContent = `✓ Đã ${p.to === 'PAUSED' ? 'tắt' : 'bật'} “${p.c.campaign}”.`;
+        } catch (e) { line.className = 'msg res-err'; line.textContent = `✗ Không ${p.to === 'PAUSED' ? 'tắt' : 'bật'} được “${p.c.campaign}”: ${e.message}`; }
+      }
+      out.append(el('p', {className: 'small muted', textContent: 'Lưu ý: bật camp chỉ có hiệu lực nếu nhóm quảng cáo và quảng cáo bên trong cũng đang bật. Trạng thái trên web sẽ được xác nhận ở lần tự cập nhật tiếp theo.'}));
+      renderCamps();
+    });
+  }
+  $('cmdIn').addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' || e.shiftKey || e.isComposing) return;
+    e.preventDefault();
+    if (!acc) return;
+    renderPlan(parseCommand($('cmdIn').value));
+  });
 
   // ---------------- data (encrypted static files) ----------------
   const b64 = (u8) => btoa(String.fromCharCode(...u8));

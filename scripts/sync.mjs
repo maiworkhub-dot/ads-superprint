@@ -115,6 +115,7 @@ export async function run(env = process.env) {
   log(`Tìm thấy ${accRows.length} tài khoản, đồng bộ ${accounts.length}.`);
 
   const outAccounts = [];
+  const allPages = new Set();
   let changed = 0;
   for (const a of accounts) {
     const id = String(a.account_id);
@@ -137,7 +138,13 @@ export async function run(env = process.env) {
       };
       // 2. camp + trạng thái + ngân sách
       const camps = await g.all(`act_${id}/campaigns`, { fields: 'id,name,effective_status,daily_budget,objective', limit: '500' });
-      const adsets = await g.all(`act_${id}/adsets`, { fields: 'campaign_id,daily_budget,effective_status', limit: '500' }).catch(() => []);
+      const adsets = await g.all(`act_${id}/adsets`, { fields: 'campaign_id,daily_budget,effective_status,promoted_object', limit: '500' }).catch(() => []);
+      // fanpage mà camp đang chạy cho (lấy từ nhóm quảng cáo và mẫu quảng cáo)
+      const pageOf = new Map();
+      const addPage = (cid, pid) => { if (!cid || !pid) return; pid = String(pid); if (!pageOf.has(cid)) pageOf.set(cid, new Set()); pageOf.get(cid).add(pid); };
+      for (const s of adsets) addPage(s.campaign_id, s.promoted_object?.page_id);
+      const ads = await g.all(`act_${id}/ads`, { fields: 'campaign_id,creative{actor_id,object_story_spec{page_id},effective_object_story_id}', limit: '500' }).catch(() => []);
+      for (const ad of ads) { const cr = ad.creative || {}; addPage(ad.campaign_id, cr.object_story_spec?.page_id || cr.actor_id || (cr.effective_object_story_id || '').split('_')[0] || null); }
       const adsetBudget = new Map();
       for (const s of adsets) if (s.effective_status === 'ACTIVE' && s.daily_budget) adsetBudget.set(s.campaign_id, (adsetBudget.get(s.campaign_id) || 0) + Number(s.daily_budget));
       const factor = ['VND', 'JPY', 'KRW', 'CLP', 'ISK', 'TWD', 'HUF', 'IDR', 'COP', 'PYG'].includes(acc.currency) ? 1 : 100; // ngân sách trả về theo đơn vị nhỏ nhất
@@ -147,6 +154,7 @@ export async function run(env = process.env) {
         const db = c.daily_budget ? Number(c.daily_budget) : adsetBudget.get(c.id) || null;
         t.daily_budget = db ? db / factor : null;
       }
+      for (const t of acc.campaigns) { if (pageOf.has(t.id)) t.page_ids = [...pageOf.get(t.id)]; for (const pid of t.page_ids || []) allPages.add(pid); }
       // 3. số liệu theo ngày
       const backfill = env.BACKFILL_FROM || (!prev.months?.length ? DEFAULT_BACKFILL : null);
       const since = backfill || addDays(prev.synced_through || today, -(refreshDays - 1));
@@ -205,7 +213,16 @@ export async function run(env = process.env) {
     outAccounts.push(acc);
   }
 
-  const out = { synced_at: new Date().toISOString(), token_expires: tokenExpires, accounts: outAccounts };
+  // tên fanpage
+  const pages = { ...(index.pages || {}) };
+  const need = [...allPages].filter((p) => !pages[p]);
+  for (let i = 0; i < need.length; i += 50) {
+    const chunk = need.slice(i, i + 50);
+    try { const r = await g.get('', { ids: chunk.join(','), fields: 'name' }); for (const [k, v] of Object.entries(r || {})) if (v?.name) pages[k] = v.name; }
+    catch { for (const pid of chunk) { try { const r = await g.get(pid, { fields: 'name' }); if (r?.name) pages[pid] = r.name; } catch { /* không đọc được tên */ } } }
+  }
+  log(`Fanpage: ${allPages.size} page, đọc được tên ${Object.keys(pages).length}.`);
+  const out = { synced_at: new Date().toISOString(), token_expires: tokenExpires, api_version: version, pages, accounts: outAccounts };
   await fs.mkdir(DATA, { recursive: true });
   await fs.writeFile(path.join(DATA, 'index.json'), JSON.stringify(await encryptJSON(key, out)));
   await fs.writeFile(metaPath, JSON.stringify(meta));
