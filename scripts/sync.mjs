@@ -215,6 +215,15 @@ export async function run(env = process.env) {
 
   // tên fanpage
   const pages = { ...(index.pages || {}) };
+  const take = (list) => { for (const p of list || []) if (p?.id && p?.name) pages[p.id] = p.name; };
+  if ([...allPages].some((p) => !pages[p])) {
+    for (const a of outAccounts) take(await g.all(`act_${a.id}/promote_pages`, { fields: 'name', limit: '100' }).catch(() => []));
+    for (const b of new Set(outAccounts.map((a) => a.bm_id).filter((b) => b && b !== 'none'))) {
+      take(await g.all(`${b}/owned_pages`, { fields: 'name', limit: '100' }).catch(() => []));
+      take(await g.all(`${b}/client_pages`, { fields: 'name', limit: '100' }).catch(() => []));
+    }
+    take(await g.all('me/accounts', { fields: 'name', limit: '100' }).catch(() => []));
+  }
   const need = [...allPages].filter((p) => !pages[p]);
   for (let i = 0; i < need.length; i += 50) {
     const chunk = need.slice(i, i + 50);
