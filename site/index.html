@@ -1056,7 +1056,7 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
 
 
   // ---------------- đăng nhập Facebook (lấy quyền bật/tắt không cần dán mã) ----------------
-  const FB_APP = '1915751329586412', FB_SCOPE = 'ads_management,ads_read';
+  const FB_APP = '1915751329586412', FB_CONFIG = '1093583000337164';
   let fbReady = null, fbTok = '';
   const fbState = (t, cls = '') => { const e = $('fbState'); e.className = 'small ' + (cls || 'muted'); e.textContent = t; };
   function loadFB() {
@@ -1089,7 +1089,7 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
     FB.login(async (r) => {
       if (r.authResponse && await hasPerm(r.authResponse.accessToken)) { fbTok = r.authResponse.accessToken; refreshFB(); }
       else fbState('Chưa cấp quyền quản lý quảng cáo. Bấm lại và chọn “Tiếp tục”/cho phép quyền quảng cáo.', 'msg err');
-    }, {scope: FB_SCOPE, auth_type: 'rerequest', return_scopes: true});
+    }, {config_id: FB_CONFIG, response_type: 'token', override_default_response_type: true});
   });
   document.querySelector('[data-tab="camp"], #tab-camp, button[data-view="camp"]')?.addEventListener('click', refreshFB);
   setTimeout(refreshFB, 1500);
