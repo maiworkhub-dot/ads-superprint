@@ -1,0 +1,893 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Ads Superprint</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%228%22 fill=%22%23d9739d%22/%3E%3Cpath d=%22M8 22V14M14 22V9M20 22V16M26 22V12%22 stroke=%22white%22 stroke-width=%223%22 stroke-linecap=%22round%22/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600&family=Playfair+Display:ital,wght@0,500;1,500&display=swap">
+<style>
+/* Layout: thanh chọn BM + tài khoản cố định ở trên; 4 tab: Báo cáo ngày (khung gọn để chụp gửi sếp) · Dashboard (theo khoảng ngày) · Camp · Đề xuất & dữ liệu */
+:root {
+  --bg: #fbf6f8; --surface: #ffffff; --surface-2: #f7eef3; --line: #efe0e8;
+  --ink: #3b2a3a; --muted: #87708a;
+  --rose: #d9739d; --rose-soft: #fbe4ee; --lilac: #8f7bd6; --lilac-soft: #efeafb;
+  --good: #2f8f6e; --good-soft: #def3ea; --warn: #b9703f; --warn-soft: #fcebdf; --bad: #c74a6f; --bad-soft: #fbe0e8;
+  --bar: #c9b8f0; --bar-hi: #d9739d; --grid: #f1e6ec;
+  --shadow: 0 1px 2px rgba(120, 70, 100, .06), 0 8px 24px rgba(120, 70, 100, .07);
+  --display: "Playfair Display", Georgia, "Times New Roman", serif;
+  --body: "Be Vietnam Pro", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --r: 16px; --r-sm: 10px;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #1c1620; --surface: #261e2a; --surface-2: #2f2535; --line: #3c3044;
+  --ink: #f5e9f1; --muted: #b8a5b6;
+  --rose: #f0a3c2; --rose-soft: #47293a; --lilac: #c4b5f3; --lilac-soft: #332c4b;
+  --good: #8fd9bd; --good-soft: #1e3830; --warn: #f0b08a; --warn-soft: #42301f; --bad: #f08aa5; --bad-soft: #48222f;
+  --bar: #7d6bc4; --bar-hi: #f0a3c2; --grid: #342a3a;
+  --shadow: 0 1px 2px rgba(0,0,0,.3); color-scheme: dark;
+} }
+:root[data-theme="dark"] {
+  --bg: #1c1620; --surface: #261e2a; --surface-2: #2f2535; --line: #3c3044;
+  --ink: #f5e9f1; --muted: #b8a5b6;
+  --rose: #f0a3c2; --rose-soft: #47293a; --lilac: #c4b5f3; --lilac-soft: #332c4b;
+  --good: #8fd9bd; --good-soft: #1e3830; --warn: #f0b08a; --warn-soft: #42301f; --bad: #f08aa5; --bad-soft: #48222f;
+  --bar: #7d6bc4; --bar-hi: #f0a3c2; --grid: #342a3a;
+  --shadow: 0 1px 2px rgba(0,0,0,.3); color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+/* lock screen */
+.lock { min-height: 100vh; display: grid; place-items: center; padding: 24px max(16px, env(safe-area-inset-left, 0px)); }
+.lock-card { width: min(100%, 380px); background: var(--surface); border-radius: 22px; box-shadow: var(--shadow); padding: 30px 26px; display: grid; gap: 14px; text-align: center; }
+.lock-card .mark { width: 52px; height: 52px; border-radius: 16px; background: var(--rose-soft); display: grid; place-items: center; margin: 0 auto; }
+.lock-card input { text-align: center; }
+.lock-card button { width: 100%; padding: 11px; }
+.warnbar { background: var(--warn-soft); color: var(--warn); border-radius: var(--r-sm); padding: 10px 14px; font-size: .86rem; }
+.linkbtn { background: none; border: 0; padding: 0; color: var(--muted); text-decoration: underline; cursor: pointer; font: inherit; font-size: .82rem; }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.55; }
+.wrap { max-width: 1120px; margin-inline: auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 24px 64px; display: grid; gap: 20px; }
+h1, h2, h3 { font-family: var(--display); font-weight: 500; margin: 0; text-wrap: balance; }
+h1 { font-size: clamp(1.6rem, 4vw, 2.2rem); line-height: 1.15; }
+h1 em { color: var(--rose); }
+h2 { font-size: 1.25rem; }
+h3 { font-size: 1.05rem; }
+.muted { color: var(--muted); }
+.small { font-size: .82rem; }
+.num { font-variant-numeric: tabular-nums; }
+[hidden] { display: none !important; }
+
+/* header & pickers */
+.top { display: flex; flex-wrap: wrap; gap: 14px 24px; align-items: end; justify-content: space-between; }
+.top p { margin: 4px 0 0; }
+.pickers { display: flex; flex-wrap: wrap; gap: 10px; }
+.pk { display: grid; gap: 4px; min-width: min(100%, 220px); flex: 1; }
+.pk label, .lbl-up { font-size: .72rem; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
+select, input[type=search], input[type=text], input[type=date] {
+  font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line);
+  border-radius: 999px; padding: 9px 16px; width: 100%; min-height: 42px;
+}
+select { appearance: none; padding-right: 38px; cursor: pointer; font-weight: 500;
+  background-image: linear-gradient(45deg, transparent 50%, var(--rose) 50%), linear-gradient(135deg, var(--rose) 50%, transparent 50%);
+  background-position: calc(100% - 19px) 52%, calc(100% - 14px) 52%; background-size: 5px 5px; background-repeat: no-repeat; }
+:focus-visible { outline: 2px solid var(--lilac); outline-offset: 2px; }
+
+/* tabs */
+.tabs { display: flex; gap: 6px; overflow-x: auto; padding: 4px; background: var(--surface-2); border-radius: 999px; width: fit-content; max-width: 100%; }
+.tab { font: inherit; border: 0; background: transparent; color: var(--muted); padding: 8px 18px; border-radius: 999px; cursor: pointer; font-weight: 500; white-space: nowrap; }
+.tab[aria-selected="true"] { background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }
+
+.card { background: var(--surface); border-radius: var(--r); padding: 22px; box-shadow: var(--shadow); min-width: 0; }
+.card-head { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: baseline; justify-content: space-between; margin-bottom: 6px; }
+.note { margin: 0 0 14px; font-size: .84rem; color: var(--muted); }
+.row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+button { font: inherit; cursor: pointer; border-radius: 999px; padding: 8px 16px; border: 1px solid transparent; font-weight: 500; }
+.btn-main { background: var(--rose); color: #fff; }
+.btn-main:disabled { opacity: .55; cursor: default; }
+.btn-soft { background: var(--surface); color: var(--ink); border-color: var(--line); }
+.btn-soft[aria-pressed="true"] { background: var(--lilac-soft); border-color: var(--lilac); color: var(--ink); }
+.chip { font-size: .74rem; font-weight: 600; padding: 3px 10px; border-radius: 999px; white-space: nowrap; display: inline-block; }
+.chip.good { background: var(--good-soft); color: var(--good); }
+.chip.bad { background: var(--bad-soft); color: var(--bad); }
+.chip.warn { background: var(--warn-soft); color: var(--warn); }
+.chip.lil { background: var(--lilac-soft); color: var(--lilac); }
+.chip.mute { background: var(--surface-2); color: var(--muted); }
+.empty { padding: 26px; text-align: center; color: var(--muted); border-radius: var(--r-sm); background: var(--surface-2); font-size: .9rem; }
+
+/* ===== daily report ===== */
+.daily-layout { display: grid; gap: 20px; grid-template-columns: minmax(0, 560px) minmax(0, 1fr); align-items: start; }
+@media (max-width: 900px) { .daily-layout { grid-template-columns: 1fr; } }
+.report { background: var(--surface); border-radius: 20px; padding: 24px 24px 18px; box-shadow: var(--shadow); border: 1px solid var(--line); display: grid; gap: 16px; }
+.rp-top { display: flex; justify-content: space-between; gap: 12px; align-items: start; }
+.rp-eyebrow { font-size: .7rem; letter-spacing: .12em; text-transform: uppercase; color: var(--rose); font-weight: 600; }
+.rp-date { font-family: var(--display); font-size: 1.6rem; line-height: 1.15; margin-top: 2px; }
+.rp-acct { font-size: .84rem; color: var(--muted); margin-top: 2px; }
+.rp-status { display: flex; flex-wrap: wrap; gap: 8px; }
+.rp-big { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.rp-big > div { background: var(--surface-2); border-radius: 12px; padding: 12px 14px; min-width: 0; }
+.rp-big > div:first-child { background: var(--rose-soft); }
+.rp-big .k { font-size: .74rem; color: var(--muted); }
+.rp-big .v { font-family: var(--display); font-size: 1.4rem; line-height: 1.2; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.rp-big .d { font-size: .74rem; margin-top: 2px; }
+.d.up-good, .d.down-good { color: var(--good); } .d.up-bad, .d.down-bad { color: var(--bad); } .d.flat { color: var(--muted); }
+.rp-small { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; border-top: 1px dashed var(--line); border-bottom: 1px dashed var(--line); padding: 10px 0; }
+.rp-small div { text-align: center; min-width: 0; }
+.rp-small .k { font-size: .7rem; color: var(--muted); }
+.rp-small .v { font-weight: 600; font-variant-numeric: tabular-nums; font-size: .92rem; }
+.rp-sec h4 { margin: 0 0 6px; font-size: .78rem; letter-spacing: .06em; text-transform: uppercase; font-weight: 600; }
+.rp-sec.good h4 { color: var(--good); } .rp-sec.bad h4 { color: var(--bad); } .rp-sec.sug h4 { color: var(--lilac); }
+.rp-sec ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 5px; }
+.rp-sec li { font-size: .86rem; display: grid; grid-template-columns: 1fr auto; gap: 10px; }
+.rp-sec li .n { overflow-wrap: anywhere; }
+.rp-sec li .m { color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.rp-sec.sug li { grid-template-columns: 1fr; }
+.rp-sec .none { font-size: .84rem; color: var(--muted); }
+.rp-foot { font-size: .72rem; color: var(--muted); display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; border-top: 1px solid var(--line); padding-top: 10px; }
+.side { display: grid; gap: 16px; }
+.msgbox { white-space: pre-wrap; font-size: .86rem; background: var(--surface-2); border-radius: var(--r-sm); padding: 14px; max-height: 360px; overflow: auto; }
+.daynav { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.daynav input[type=date] { width: auto; }
+
+/* ===== dashboard ===== */
+.kpis { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr)); }
+.kpi { background: var(--surface); border-radius: var(--r); padding: 16px 18px; box-shadow: var(--shadow); min-width: 0; }
+.kpi:first-child { background: var(--rose-soft); box-shadow: none; }
+.kpi .k { font-size: .76rem; color: var(--muted); }
+.kpi .v { font-family: var(--display); font-size: 1.6rem; line-height: 1.2; margin-top: 2px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.kpi .s { font-size: .74rem; color: var(--muted); }
+.range { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.range input[type=date] { width: auto; }
+.chart { position: relative; width: 100%; min-height: 220px; }
+.chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+.chart text { fill: var(--muted); font-size: 11px; font-family: var(--body); }
+.tip { position: absolute; z-index: 3; pointer-events: none; background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow); border-radius: var(--r-sm); padding: 8px 12px; font-size: .78rem; min-width: 150px; }
+.tip b { display: block; font-weight: 600; margin-bottom: 2px; }
+.grid2 { display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); }
+
+/* tables */
+.tbl { overflow: auto; max-height: 520px; border: 1px solid var(--line); border-radius: var(--r-sm); }
+table { width: 100%; border-collapse: collapse; font-size: .84rem; font-variant-numeric: tabular-nums; }
+th { position: sticky; top: 0; background: var(--surface-2); text-align: left; font-weight: 500; color: var(--muted); padding: 9px 12px; white-space: nowrap; font-size: .76rem; z-index: 1; }
+th button { all: unset; cursor: pointer; }
+th button:focus-visible { outline: 2px solid var(--lilac); }
+td { padding: 9px 12px; border-top: 1px solid var(--line); vertical-align: top; }
+.r { text-align: right; white-space: nowrap; }
+td.cname { min-width: 220px; font-weight: 500; overflow-wrap: anywhere; }
+td.good { color: var(--good); font-weight: 600; } td.bad { color: var(--bad); font-weight: 600; }
+.tools { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; margin-bottom: 12px; }
+.tools input[type=search] { flex: 1; min-width: 180px; }
+.chk { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-size: .84rem; font-weight: 500; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); white-space: nowrap; user-select: none; background: var(--surface); }
+.chk input { accent-color: var(--lilac); width: 16px; height: 16px; margin: 0; }
+
+/* recs */
+.recs { display: grid; gap: 10px; }
+.rec { display: grid; grid-template-columns: auto 1fr auto; gap: 14px; align-items: start; padding: 14px 16px; border: 1px solid var(--line); border-radius: var(--r-sm); }
+.rec.approved { border-color: var(--lilac); background: var(--lilac-soft); }
+.rec .name { font-weight: 600; overflow-wrap: anywhere; }
+.rec .why { font-size: .86rem; color: var(--muted); margin-top: 2px; }
+.foot { margin-top: 12px; padding: 12px 16px; border-radius: var(--r-sm); background: var(--surface-2); font-size: .86rem; }
+.drop { border: 1.5px dashed var(--line); border-radius: var(--r-sm); padding: 16px; display: grid; gap: 10px; }
+.drop.over { border-color: var(--rose); background: var(--rose-soft); }
+.drop input[type=file] { font: inherit; font-size: .84rem; max-width: 100%; }
+.msg { font-size: .85rem; margin: 0; }
+.msg.ok { color: var(--good); } .msg.err { color: var(--bad); }
+ol.steps { margin: 0; padding-left: 1.2rem; display: grid; gap: 3px; font-size: .86rem; color: var(--muted); }
+.ai-out { white-space: pre-wrap; margin-top: 12px; font-size: .88rem; padding: 14px 16px; border-radius: var(--r-sm); background: var(--lilac-soft); }
+@media (max-width: 560px) {
+  .rec { grid-template-columns: 1fr; }
+  .card, .report { padding: 18px 16px; }
+  .rp-big { grid-template-columns: 1fr 1fr; }
+  .rp-big > div:first-child { grid-column: 1 / -1; }
+  .rp-small { grid-template-columns: 1fr 1fr; row-gap: 10px; }
+}
+</style>
+</head>
+<body>
+<div class="lock" id="lock" hidden>
+  <form class="lock-card" id="lockForm" autocomplete="on">
+    <div class="mark" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 32 32"><path d="M8 22V14M14 22V9M20 22V16M26 22V12" stroke="var(--rose)" stroke-width="3" stroke-linecap="round" fill="none"/></svg></div>
+    <h1 style="font-size:1.5rem">Báo cáo quảng cáo <em>Meta</em></h1>
+    <p class="muted small" style="margin:0">Nhập mật khẩu để xem số liệu.</p>
+    <input type="text" name="username" value="superprint-ads" autocomplete="username" hidden>
+    <input type="password" id="pw" autocomplete="current-password" placeholder="Mật khẩu" aria-label="Mật khẩu" required>
+    <button class="btn-main" type="submit" id="pwBtn">Mở báo cáo</button>
+    <p class="msg err" id="pwErr" aria-live="polite"></p>
+  </form>
+</div>
+
+<div class="wrap" id="app" hidden>
+  <header class="top">
+    <div>
+      <h1>Báo cáo quảng cáo <em>Meta</em></h1>
+      <p class="muted small" id="sync">Đang tải dữ liệu…</p>
+      <p class="muted small" style="margin-top:2px"><span id="autoSync"></span> · <button class="linkbtn" id="logout" type="button">Đăng xuất</button></p>
+    </div>
+    <div class="pickers">
+      <div class="pk"><label for="bm">Business (BM)</label><select id="bm"><option>Đang tải…</option></select></div>
+      <div class="pk"><label for="acct">Tài khoản quảng cáo</label><select id="acct"><option>Đang tải…</option></select></div>
+    </div>
+  </header>
+
+  <div class="warnbar" id="warn" hidden></div>
+
+  <nav class="tabs" role="tablist" aria-label="Các mục">
+    <button class="tab" role="tab" id="t-bao-cao" data-view="bao-cao" aria-selected="true">Báo cáo ngày</button>
+    <button class="tab" role="tab" id="t-dashboard" data-view="dashboard" aria-selected="false">Dashboard</button>
+    <button class="tab" role="tab" id="t-camp" data-view="camp" aria-selected="false">Camp</button>
+    <button class="tab" role="tab" id="t-de-xuat" data-view="de-xuat" aria-selected="false">Đề xuất</button>
+  </nav>
+
+  <!-- ===== Báo cáo ngày ===== -->
+  <section id="v-bao-cao" class="view">
+    <div class="daily-layout">
+      <article class="report" id="report" aria-label="Khung báo cáo ngày">
+        <div class="rp-top">
+          <div>
+            <div class="rp-eyebrow">Báo cáo Ads ngày</div>
+            <div class="rp-date" id="rpDate">—</div>
+            <div class="rp-acct" id="rpAcct">—</div>
+          </div>
+          <span class="chip mute" id="rpBadge">—</span>
+        </div>
+        <div class="rp-status" id="rpStatus"></div>
+        <div class="rp-big">
+          <div><div class="k">Chi tiêu</div><div class="v" id="rpSpend">—</div><div class="d" id="rpSpendD"></div></div>
+          <div><div class="k" id="rpResK">Kết quả</div><div class="v" id="rpRes">—</div><div class="d" id="rpResD"></div></div>
+          <div><div class="k">Giá / kết quả</div><div class="v" id="rpCpr">—</div><div class="d" id="rpCprD"></div></div>
+        </div>
+        <div class="rp-small">
+          <div><div class="k">CTR</div><div class="v" id="rpCtr">—</div></div>
+          <div><div class="k">CPM</div><div class="v" id="rpCpm">—</div></div>
+          <div><div class="k">CPC</div><div class="v" id="rpCpc">—</div></div>
+          <div><div class="k">Hiển thị</div><div class="v" id="rpImp">—</div></div>
+        </div>
+        <div class="rp-sec good"><h4>Hiệu quả</h4><ul id="rpGood"></ul></div>
+        <div class="rp-sec bad"><h4>Chưa hiệu quả</h4><ul id="rpBad"></ul></div>
+        <div class="rp-sec sug"><h4>Đề xuất</h4><ul id="rpSug"></ul></div>
+        <div class="rp-foot"><span id="rpBench">—</span><span>Nguồn: Meta Ads Manager</span></div>
+      </article>
+
+      <div class="side">
+        <div class="card">
+          <h3>Chọn ngày báo cáo</h3>
+          <p class="note" style="margin-top:4px">So sánh với ngày liền trước. Mốc “trung bình” là 30 ngày tính đến ngày báo cáo.</p>
+          <div class="daynav">
+            <button class="btn-soft" id="dPrev" aria-label="Ngày trước">‹</button>
+            <input type="date" id="dPick" aria-label="Ngày báo cáo">
+            <button class="btn-soft" id="dNext" aria-label="Ngày sau">›</button>
+            <button class="btn-soft" id="dLastSpend">Ngày gần nhất có chi tiêu</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h3>Tin nhắn gửi sếp</h3><button class="btn-main" id="copyMsg">Copy tin nhắn</button></div>
+          <p class="note" style="margin-top:4px">Copy rồi dán vào Zalo/Messenger. Hoặc chụp màn hình khung báo cáo bên cạnh.</p>
+          <div class="msgbox" id="msgText">—</div>
+          <p class="msg" id="copyNote" aria-live="polite"></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Dashboard ===== -->
+  <section id="v-dashboard" class="view" hidden>
+    <div style="display:grid;gap:20px">
+      <div class="card">
+        <div class="card-head"><h2>Hiệu quả theo thời gian</h2><span class="muted small" id="rangeLbl"></span></div>
+        <div class="range" role="group" aria-label="Khoảng thời gian">
+          <button class="btn-soft rp" data-r="7">7 ngày</button>
+          <button class="btn-soft rp" data-r="30">30 ngày</button>
+          <button class="btn-soft rp" data-r="90">90 ngày</button>
+          <button class="btn-soft rp" data-r="year">Năm nay</button>
+          <button class="btn-soft rp" data-r="all">Toàn bộ</button>
+          <span class="muted small">hoặc từ</span>
+          <input type="date" id="rFrom" aria-label="Từ ngày">
+          <span class="muted small">đến</span>
+          <input type="date" id="rTo" aria-label="Đến ngày">
+        </div>
+      </div>
+      <section class="kpis" aria-label="Tổng quan khoảng thời gian">
+        <div class="kpi"><div class="k">Tổng chi tiêu</div><div class="v" id="kSpend">—</div><div class="s" id="kSpendS">&nbsp;</div></div>
+        <div class="kpi"><div class="k">Kết quả (lead/tin nhắn)</div><div class="v" id="kRes">—</div><div class="s" id="kResS">&nbsp;</div></div>
+        <div class="kpi"><div class="k">Giá / kết quả</div><div class="v" id="kCpr">—</div><div class="s">&nbsp;</div></div>
+        <div class="kpi"><div class="k">CTR</div><div class="v" id="kCtr">—</div><div class="s" id="kCtrS">&nbsp;</div></div>
+        <div class="kpi"><div class="k">CPM</div><div class="v" id="kCpm">—</div><div class="s" id="kCpmS">&nbsp;</div></div>
+      </section>
+      <div class="grid2">
+        <div class="card">
+          <h3>Chi tiêu mỗi ngày</h3>
+          <p class="note" style="margin-top:4px">Rê chuột lên cột để xem chi tiết ngày.</p>
+          <div class="chart" id="chSpend"></div>
+        </div>
+        <div class="card">
+          <h3>Giá mỗi kết quả theo ngày</h3>
+          <p class="note" style="margin-top:4px">Chỉ tính ngày có kết quả. Đường gạch là trung bình của khoảng đang xem.</p>
+          <div class="chart" id="chCpr"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>Theo camp trong khoảng này</h3><span class="muted small" id="campRangeCount"></span></div>
+        <div class="tbl"><table id="tCampRange"><thead><tr>
+          <th><button data-k="campaign">Camp</button></th><th class="r"><button data-k="days">Ngày chạy</button></th><th class="r"><button data-k="spend">Chi tiêu</button></th>
+          <th class="r"><button data-k="res">Kết quả</button></th><th class="r"><button data-k="cpr">Giá/kết quả</button></th><th class="r"><button data-k="ctr">CTR</button></th><th class="r"><button data-k="cpm">CPM</button></th>
+        </tr></thead><tbody></tbody></table></div>
+      </div>
+      <div class="grid2">
+        <div class="card">
+          <h3>Tổng hợp theo tháng</h3>
+          <div class="tbl" style="margin-top:12px"><table id="tMonth"><thead><tr>
+            <th>Tháng</th><th class="r">Chi tiêu</th><th class="r">Kết quả</th><th class="r">Giá/kết quả</th><th class="r">Camp</th>
+          </tr></thead><tbody></tbody></table></div>
+        </div>
+        <div class="card">
+          <h3>Nhật ký từng ngày</h3>
+          <div class="tbl" style="margin-top:12px"><table id="tDay"><thead><tr>
+            <th>Ngày</th><th class="r">Chi tiêu</th><th class="r">Kết quả</th><th class="r">Giá/kết quả</th><th class="r">Camp chạy</th>
+          </tr></thead><tbody></tbody></table></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Camp ===== -->
+  <section id="v-camp" class="view" hidden>
+    <div class="card">
+      <div class="card-head"><h2>Tất cả camp</h2><span class="muted small" id="campCount"></span></div>
+      <p class="note">Trạng thái hiện tại theo lần cập nhật gần nhất, cộng dồn toàn bộ lịch sử đã lưu.</p>
+      <div class="tools">
+        <input type="search" id="cq" placeholder="Tìm camp…" aria-label="Tìm camp">
+        <label class="chk"><input type="checkbox" id="cOnlyRun"> Chỉ camp đang chạy</label>
+        <label class="chk"><input type="checkbox" id="cOnlySpend" checked> Chỉ camp từng chi tiêu</label>
+      </div>
+      <div class="tbl"><table id="tCamp"><thead><tr>
+        <th>Camp</th><th>Trạng thái</th><th class="r">Ngân sách/ngày</th><th class="r">Tổng chi</th><th class="r">Kết quả</th><th class="r">Giá/kết quả</th><th>Loại kết quả</th><th class="r">Chạy lần cuối</th>
+      </tr></thead><tbody></tbody></table></div>
+    </div>
+  </section>
+
+  <!-- ===== Đề xuất ===== -->
+  <section id="v-de-xuat" class="view" hidden>
+    <div class="card">
+      <div class="card-head"><h2>Đề xuất tối ưu</h2><button class="btn-main" id="copyRecs">Copy đề xuất</button></div>
+      <p class="note">Dựa trên giá mỗi kết quả của từng camp trong 30 ngày gần nhất so với trung bình tài khoản. Bạn tự quyết định trên Ads Manager.</p>
+      <div class="recs" id="recs"></div>
+      <p class="msg" id="recNote" aria-live="polite"></p>
+    </div>
+  </section>
+</div>
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const $$ = (s) => Array.from(document.querySelectorAll(s));
+  const NF = new Intl.NumberFormat('vi-VN');
+  const vnd = (v) => v == null || !isFinite(v) ? '—' : NF.format(Math.round(v)) + ' ₫';
+  const vndShort = (v) => { if (v == null || !isFinite(v)) return '—'; if (Math.abs(v) >= 1e6) return (v / 1e6).toLocaleString('vi-VN', {maximumFractionDigits: 1}) + ' tr'; if (Math.abs(v) >= 1e3) return Math.round(v / 1e3) + 'k'; return String(Math.round(v)); };
+  const num = (v) => v == null || !isFinite(v) ? '—' : NF.format(v);
+  const pct = (v) => v == null || !isFinite(v) ? '—' : new Intl.NumberFormat('vi-VN', {style: 'percent', minimumFractionDigits: 2, maximumFractionDigits: 2}).format(v);
+  const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids.filter((k) => k != null && k !== false)); return e; };
+  const store = { get(k) { try { return localStorage.getItem(k); } catch { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch {} } };
+  const hash = (s) => { let h = 5381; for (const c of String(s)) h = ((h << 5) + h + c.codePointAt(0)) >>> 0; return h.toString(36); };
+  const RES_TYPES = new Set(['lead', 'message']);
+  const resLabel = (t) => t === 'lead' ? 'lead' : t === 'message' ? 'tin nhắn' : t === 'reach' ? 'tiếp cận' : t ? t : '—';
+  const isRunning = (c) => /đang chạy|active/i.test(c.status || '');
+
+  // date helpers (YYYY-MM-DD strings, UTC math)
+  const D = (s) => new Date(s + 'T00:00:00Z');
+  const S = (d) => d.toISOString().slice(0, 10);
+  const addDays = (s, n) => { const d = D(s); d.setUTCDate(d.getUTCDate() + n); return S(d); };
+  const fmtDate = (s) => { const [y, m, d] = s.split('-'); return `${d}/${m}/${y}`; };
+  const fmtShort = (s) => { const [, m, d] = s.split('-'); return `${+d}/${+m}`; };
+  const WD = ['Chủ nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
+
+  let accounts = [], acc = null, KEY = null, INDEX = null, MANI = {files: {}}, loadSeq = 0;
+  let daily = new Map();   // date -> {spend, imp, clicks, res, camps: Map(ci -> row)}
+  let campTot = [];        // per campaign all-time aggregates
+  let reportDate = null, range = {from: null, to: null, preset: '30'};
+
+  // ---------------- data assembly ----------------
+  function buildFromMonths(monthDocs) {
+    daily = new Map();
+    const camps = acc.campaigns || [];
+    campTot = camps.map((c) => ({...c, spend: 0, res: 0, imp: 0, clicks: 0, last: null, days: 0}));
+    for (const m of monthDocs) {
+      for (const r of m.rows || []) {
+        const [dd, ci, spend, imp, reach, clicks, res] = r;
+        const date = `${m.month}-${String(dd).padStart(2, '0')}`;
+        const c = camps[ci]; if (!c) continue;
+        const counts = RES_TYPES.has(c.result_type);
+        let d = daily.get(date);
+        if (!d) { d = {spend: 0, imp: 0, clicks: 0, res: 0, resSpend: 0, camps: new Map()}; daily.set(date, d); }
+        d.spend += spend; d.imp += imp; d.clicks += clicks;
+        if (counts) { d.res += res; d.resSpend += spend; }
+        d.camps.set(ci, {ci, spend, imp, clicks, res: counts ? res : 0, counts});
+        const t = campTot[ci]; t.spend += spend; t.imp += imp; t.clicks += clicks; if (counts) t.res += res;
+        if (spend > 0) { t.days++; if (!t.last || date > t.last) t.last = date; }
+      }
+    }
+  }
+
+  function agg(from, to) {
+    const out = {spend: 0, imp: 0, clicks: 0, res: 0, resSpend: 0, days: 0, per: new Map()};
+    for (const [date, d] of daily) {
+      if (date < from || date > to) continue;
+      out.spend += d.spend; out.imp += d.imp; out.clicks += d.clicks; out.res += d.res; out.resSpend += d.resSpend;
+      if (d.spend > 0) out.days++;
+      for (const c of d.camps.values()) {
+        let p = out.per.get(c.ci);
+        if (!p) { p = {ci: c.ci, spend: 0, imp: 0, clicks: 0, res: 0, days: 0, counts: c.counts}; out.per.set(c.ci, p); }
+        p.spend += c.spend; p.imp += c.imp; p.clicks += c.clicks; p.res += c.res; if (c.spend > 0) p.days++;
+      }
+    }
+    out.cpr = out.res ? out.resSpend / out.res : null;
+    out.ctr = out.imp ? out.clicks / out.imp : null;
+    out.cpm = out.imp ? out.spend / out.imp * 1000 : null;
+    out.cpc = out.clicks ? out.spend / out.clicks : null;
+    return out;
+  }
+  const dataDates = () => Array.from(daily.keys()).filter((k) => daily.get(k).spend > 0).sort();
+  const lastDate = () => acc?.synced_through || dataDates().slice(-1)[0] || S(new Date());
+  const firstDate = () => acc?.first_date || dataDates()[0] || lastDate();
+  const cname = (ci) => acc.campaigns[ci]?.campaign || '—';
+
+  // ---------------- delta helper ----------------
+  function delta(elm, cur, prev, goodWhenUp, kind) {
+    elm.className = 'd';
+    if (cur == null || prev == null || !isFinite(cur) || !isFinite(prev)) { elm.textContent = prev == null ? '' : 'Hôm trước: —'; elm.classList.add('flat'); return ''; }
+    if (prev === 0) { elm.textContent = cur === 0 ? 'Bằng hôm trước' : 'Hôm trước: 0'; elm.classList.add('flat'); return elm.textContent; }
+    const ch = (cur - prev) / prev;
+    if (Math.abs(ch) < 0.005) { elm.textContent = 'Bằng hôm trước'; elm.classList.add('flat'); return elm.textContent; }
+    const up = ch > 0;
+    elm.textContent = `${up ? '▲' : '▼'} ${Math.abs(ch * 100).toFixed(0)}% so với hôm trước`;
+    elm.classList.add(up ? (goodWhenUp ? 'up-good' : 'up-bad') : (goodWhenUp ? 'down-bad' : 'down-good'));
+    return `${up ? '+' : '−'}${Math.abs(ch * 100).toFixed(0)}%`;
+  }
+
+  // ---------------- daily report ----------------
+  function dayAnalysis(date) {
+    const today = agg(date, date), prev = agg(addDays(date, -1), addDays(date, -1));
+    const bench = agg(addDays(date, -29), date);
+    const avg = bench.cpr;
+    const camps = acc.campaigns || [];
+    const per = Array.from(today.per.values()).filter((p) => p.spend > 0 || p.res > 0);
+    const resCamps = per.filter((p) => p.counts);
+    const good = resCamps.filter((p) => p.res > 0 && (!avg || p.spend / p.res <= avg)).sort((a, b) => a.spend / a.res - b.spend / b.res).slice(0, 3);
+    const bad = resCamps.filter((p) => (p.res > 0 && avg && p.spend / p.res >= avg * 1.4) || (p.res === 0 && avg && p.spend >= avg * 0.8)).sort((a, b) => b.spend - a.spend).slice(0, 3);
+    // suggestions
+    const sug = [];
+    for (const p of bad) {
+      const c = camps[p.ci];
+      const b30 = bench.per.get(p.ci); const cpr30 = b30 && b30.res ? b30.spend / b30.res : null;
+      if (cpr30 && avg && cpr30 >= avg * 1.4) sug.push(`Giảm ngân sách hoặc tắt “${c.campaign}”: giá/kết quả 30 ngày ${vnd(cpr30)}, cao hơn trung bình ${vnd(avg)}.`);
+      else if (p.res === 0) sug.push(`Theo dõi “${c.campaign}”: chi ${vnd(p.spend)} chưa ra kết quả. Nếu thêm 1 ngày vẫn vậy thì nên tắt.`);
+      else sug.push(`Theo dõi “${c.campaign}”: hôm nay đắt (${vnd(p.spend / p.res)}/kết quả) nhưng 30 ngày vẫn ổn. Chưa cần thay đổi.`);
+    }
+    for (const p of good) {
+      const c = camps[p.ci];
+      const b30 = bench.per.get(p.ci); const cpr30 = b30 && b30.res ? b30.spend / b30.res : null;
+      if (sug.length >= 3) break;
+      if (cpr30 && avg && cpr30 <= avg && b30.res >= 5) sug.push(`Cân nhắc tăng 20% ngân sách “${c.campaign}”: giá/kết quả 30 ngày ${vnd(cpr30)}, rẻ hơn trung bình.`);
+    }
+    if (!per.length) {
+      const last = dataDates().filter((d) => d <= date).slice(-1)[0];
+      sug.push(last ? `Không có camp nào chi tiêu trong ngày. Lần chi tiêu gần nhất là ${fmtDate(last)}.` : 'Tài khoản chưa có dữ liệu chi tiêu.');
+      const best = Array.from(bench.per.values()).filter((p) => p.counts && p.res >= 3).sort((a, b) => a.spend / a.res - b.spend / b.res)[0];
+      if (best) sug.push(`Nếu bật lại, ưu tiên “${camps[best.ci].campaign}”: giá/kết quả 30 ngày ${vnd(best.spend / best.res)}.`);
+    }
+    if (!sug.length) sug.push('Các camp đang ổn, giữ nguyên ngân sách.');
+    const mainType = (() => { const c = {}; for (const p of resCamps) c[camps[p.ci].result_type] = (c[camps[p.ci].result_type] || 0) + p.res; const k = Object.keys(c).sort((a, b) => c[b] - c[a])[0]; return k || (Array.from(bench.per.values()).find((p) => p.counts) ? camps[Array.from(bench.per.values()).find((p) => p.counts).ci].result_type : 'lead'); })();
+    const isLatest = date >= lastDate();
+    const runNow = camps.filter(isRunning).length;
+    return {today, prev, bench, avg, per, good, bad, sug: sug.slice(0, 3), mainType, isLatest, runNow, total: camps.length};
+  }
+
+  function renderReport() {
+    if (!acc) return;
+    const date = reportDate;
+    const a = dayAnalysis(date);
+    const t = a.today, p = a.prev;
+    const dObj = D(date);
+    $('rpDate').textContent = `${WD[dObj.getUTCDay()]}, ${fmtDate(date)}`;
+    $('rpAcct').textContent = `${acc.name} · BM ${acc.bm_name || '—'}`;
+    const badge = $('rpBadge');
+    const partial = acc.synced_through === date;
+    badge.className = 'chip ' + (partial ? 'warn' : t.spend > 0 ? 'good' : 'mute');
+    badge.textContent = partial ? `Tạm tính đến ${acc.synced_time || 'hiện tại'}` : t.spend > 0 ? 'Có chạy' : 'Không chạy';
+    const st = $('rpStatus'); st.replaceChildren();
+    const ran = a.per.filter((x) => x.spend > 0).length;
+    st.append(el('span', {className: 'chip ' + (ran ? 'good' : 'mute'), textContent: `${ran} camp có chi tiêu`}),
+      el('span', {className: 'chip mute', textContent: `${a.total - ran} camp không chi tiêu`}));
+    if (a.isLatest) st.append(el('span', {className: 'chip ' + (a.runNow ? 'lil' : 'bad'), textContent: a.runNow ? `${a.runNow} camp đang bật` : 'Hiện không bật camp nào'}));
+    const resWord = resLabel(a.mainType);
+    $('rpResK').textContent = `Kết quả (${resWord})`;
+    $('rpSpend').textContent = vnd(t.spend);
+    $('rpRes').textContent = num(t.res);
+    $('rpCpr').textContent = vnd(t.cpr);
+    const dS = delta($('rpSpendD'), t.spend, p.spend, true);
+    const dR = delta($('rpResD'), t.res, p.res, true);
+    const dC = delta($('rpCprD'), t.cpr, p.cpr, false);
+    $('rpCtr').textContent = pct(t.ctr); $('rpCpm').textContent = vnd(t.cpm); $('rpCpc').textContent = vnd(t.cpc); $('rpImp').textContent = num(t.imp);
+    const list = (ul, items, fmt, none) => { ul.replaceChildren(); if (!items.length) { ul.append(el('li', {className: 'none', textContent: none})); return; } for (const it of items) ul.append(fmt(it)); };
+    const campLi = (x) => el('li', {}, el('span', {className: 'n', textContent: cname(x.ci)}), el('span', {className: 'm', textContent: x.res ? `${num(x.res)} · ${vnd(x.spend / x.res)}` : `0 kết quả · chi ${vnd(x.spend)}`}));
+    list($('rpGood'), a.good, campLi, t.spend > 0 ? 'Chưa có camp nào rẻ hơn mức trung bình.' : 'Không có dữ liệu trong ngày.');
+    list($('rpBad'), a.bad, campLi, t.spend > 0 ? 'Không có camp nào đáng lo.' : 'Không có dữ liệu trong ngày.');
+    list($('rpSug'), a.sug, (s) => el('li', {textContent: s}), '');
+    $('rpBench').textContent = a.avg ? `TB 30 ngày: ${vnd(a.avg)}/${resWord}` : 'Chưa đủ dữ liệu 30 ngày';
+
+    // message
+    const lines = [];
+    lines.push(`BÁO CÁO ADS ${fmtDate(date)} – ${acc.name}${partial ? ` (tạm tính đến ${acc.synced_time || 'hiện tại'})` : ''}`);
+    lines.push(`• Camp có chi tiêu: ${ran} | Không chi tiêu: ${a.total - ran}${a.isLatest ? ` | Đang bật: ${a.runNow}` : ''}`);
+    lines.push(`• Chi tiêu: ${vnd(t.spend)}${dS ? ` (${dS} so với hôm trước)` : ''}`);
+    lines.push(`• Kết quả: ${num(t.res)} ${resWord}${t.cpr ? ` | Giá/${resWord}: ${vnd(t.cpr)}` : ''}${a.avg ? ` (TB 30 ngày ${vnd(a.avg)})` : ''}`);
+    if (t.imp) lines.push(`• CTR ${pct(t.ctr)} | CPM ${vnd(t.cpm)} | CPC ${vnd(t.cpc)}`);
+    if (a.good.length) lines.push(`✔ Hiệu quả: ${a.good.map((x) => `${cname(x.ci)} (${vnd(x.spend / x.res)})`).join('; ')}`);
+    if (a.bad.length) lines.push(`✘ Chưa hiệu quả: ${a.bad.map((x) => `${cname(x.ci)} (${x.res ? vnd(x.spend / x.res) : '0 kết quả'})`).join('; ')}`);
+    lines.push(`→ Đề xuất: ${a.sug.join(' ')}`);
+    $('msgText').textContent = lines.join('\n');
+    $('dPick').value = date;
+    $('dPick').min = firstDate(); $('dPick').max = lastDate();
+    $('dNext').disabled = date >= lastDate(); $('dPrev').disabled = date <= firstDate();
+  }
+
+  $('dPick').addEventListener('change', (e) => { if (e.target.value) { reportDate = e.target.value; renderReport(); } });
+  $('dPrev').addEventListener('click', () => { reportDate = addDays(reportDate, -1); renderReport(); });
+  $('dNext').addEventListener('click', () => { reportDate = addDays(reportDate, 1); renderReport(); });
+  $('dLastSpend').addEventListener('click', () => { const d = dataDates().filter((x) => x <= lastDate()).slice(-1)[0]; if (d) { reportDate = d; renderReport(); } });
+  $('copyMsg').addEventListener('click', () => {
+    const text = $('msgText').textContent, note = $('copyNote');
+    const fallback = () => { const r = document.createRange(); r.selectNodeContents($('msgText')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); note.className = 'msg'; note.textContent = 'Đã bôi đen tin nhắn, bấm Ctrl/Cmd + C để copy.'; };
+    try { navigator.clipboard.writeText(text).then(() => { note.className = 'msg ok'; note.textContent = 'Đã copy tin nhắn.'; }, fallback); } catch { fallback(); }
+  });
+
+  // ---------------- dashboard ----------------
+  function setRange(preset) {
+    const to = lastDate();
+    range.preset = preset;
+    if (preset === 'all') range = {from: firstDate(), to, preset};
+    else if (preset === 'year') range = {from: to.slice(0, 4) + '-01-01', to, preset};
+    else if (preset === 'custom') {}
+    else range = {from: addDays(to, -(+preset - 1)), to, preset};
+    $$('.rp').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.r === range.preset)));
+    $('rFrom').value = range.from; $('rTo').value = range.to;
+    renderDashboard();
+  }
+  $$('.rp').forEach((b) => b.addEventListener('click', () => setRange(b.dataset.r)));
+  ['rFrom', 'rTo'].forEach((id) => $(id).addEventListener('change', () => {
+    const f = $('rFrom').value, t = $('rTo').value; if (!f || !t) return;
+    range = {from: f <= t ? f : t, to: f <= t ? t : f, preset: 'custom'};
+    $$('.rp').forEach((b) => b.setAttribute('aria-pressed', 'false'));
+    renderDashboard();
+  }));
+
+  let campSort = {k: 'spend', dir: -1};
+  $$('#tCampRange th button').forEach((b) => b.addEventListener('click', () => { campSort = {k: b.dataset.k, dir: campSort.k === b.dataset.k ? -campSort.dir : (b.dataset.k === 'campaign' || b.dataset.k === 'cpr' ? 1 : -1)}; renderDashboard(); }));
+
+  function renderDashboard() {
+    if (!acc || !range.from) return;
+    const {from, to} = range;
+    const a = agg(from, to);
+    const nDays = Math.round((D(to) - D(from)) / 864e5) + 1;
+    const prevA = agg(addDays(from, -nDays), addDays(from, -1));
+    $('rangeLbl').textContent = `${fmtDate(from)} – ${fmtDate(to)} · ${nDays} ngày`;
+    $('kSpend').textContent = vnd(a.spend);
+    $('kSpendS').textContent = prevA.spend ? `Kỳ trước: ${vnd(prevA.spend)}` : `${a.days} ngày có chi tiêu`;
+    $('kRes').textContent = num(a.res);
+    $('kResS').textContent = prevA.res ? `Kỳ trước: ${num(prevA.res)}` : ' ';
+    $('kCpr').textContent = vnd(a.cpr);
+    $('kCtr').textContent = pct(a.ctr); $('kCtrS').textContent = `${num(a.clicks)} lượt click`;
+    $('kCpm').textContent = vnd(a.cpm); $('kCpmS').textContent = `${num(a.imp)} lượt hiển thị`;
+
+    // series
+    const days = [];
+    for (let d = from; d <= to; d = addDays(d, 1)) { const x = daily.get(d); days.push({date: d, spend: x?.spend || 0, res: x?.res || 0, cpr: x && x.res ? x.resSpend / x.res : null, camps: x ? Array.from(x.camps.values()).filter((c) => c.spend > 0).length : 0}); if (days.length > 2000) break; }
+    drawBars($('chSpend'), days);
+    drawLine($('chCpr'), days, a.cpr);
+
+    // camp table
+    const rows = Array.from(a.per.values()).filter((p) => p.spend > 0 || p.res > 0).map((p) => ({...p, campaign: cname(p.ci), cpr: p.counts && p.res ? p.spend / p.res : null, ctr: p.imp ? p.clicks / p.imp : null, cpm: p.imp ? p.spend / p.imp * 1000 : null, type: acc.campaigns[p.ci]?.result_type}));
+    const k = campSort.k, dir = campSort.dir;
+    rows.sort((x, y) => { const av = x[k], bv = y[k]; if (av == null) return 1; if (bv == null) return -1; return (typeof av === 'string' ? av.localeCompare(bv, 'vi') : av - bv) * dir; });
+    $('campRangeCount').textContent = `${rows.length} camp có chi tiêu`;
+    const tb = $('tCampRange').tBodies[0]; tb.replaceChildren();
+    if (!rows.length) tb.append(el('tr', {}, el('td', {colSpan: 7, className: 'muted', textContent: 'Không có camp nào chi tiêu trong khoảng này.'})));
+    for (const r of rows) {
+      const cls = r.cpr == null || !a.cpr ? 'r' : r.cpr >= a.cpr * 1.4 ? 'r bad' : r.cpr <= a.cpr ? 'r good' : 'r';
+      tb.append(el('tr', {}, el('td', {className: 'cname', textContent: r.campaign}), el('td', {className: 'r', textContent: num(r.days)}), el('td', {className: 'r', textContent: vnd(r.spend)}),
+        el('td', {className: 'r', textContent: r.counts ? `${num(r.res)} ${resLabel(r.type)}` : `— (${resLabel(r.type)})`}), el('td', {className: cls, textContent: vnd(r.cpr)}), el('td', {className: 'r', textContent: pct(r.ctr)}), el('td', {className: 'r', textContent: vnd(r.cpm)})));
+    }
+    // months
+    const months = new Map();
+    for (const d of days) { const m = d.date.slice(0, 7); let x = months.get(m); if (!x) { x = {spend: 0, res: 0, resSpend: 0, camps: new Set()}; months.set(m, x); } const dd = daily.get(d.date); if (dd) { x.spend += dd.spend; x.res += dd.res; x.resSpend += dd.resSpend; for (const c of dd.camps.values()) if (c.spend > 0) x.camps.add(c.ci); } }
+    const tm = $('tMonth').tBodies[0]; tm.replaceChildren();
+    const mrows = Array.from(months.entries()).filter(([, x]) => x.spend > 0).sort((p, q) => q[0].localeCompare(p[0]));
+    if (!mrows.length) tm.append(el('tr', {}, el('td', {colSpan: 5, className: 'muted', textContent: 'Không có chi tiêu.'})));
+    for (const [m, x] of mrows) tm.append(el('tr', {}, el('td', {textContent: `Tháng ${+m.slice(5)}/${m.slice(0, 4)}`}), el('td', {className: 'r', textContent: vnd(x.spend)}), el('td', {className: 'r', textContent: num(x.res)}), el('td', {className: 'r', textContent: vnd(x.res ? x.resSpend / x.res : null)}), el('td', {className: 'r', textContent: num(x.camps.size)})));
+    // day log
+    const td = $('tDay').tBodies[0]; td.replaceChildren();
+    const drows = days.filter((d) => d.spend > 0 || d.res > 0).reverse();
+    if (!drows.length) td.append(el('tr', {}, el('td', {colSpan: 5, className: 'muted', textContent: 'Không có ngày nào chi tiêu trong khoảng này.'})));
+    for (const d of drows) {
+      const tr = el('tr', {}, el('td', {textContent: fmtDate(d.date)}), el('td', {className: 'r', textContent: vnd(d.spend)}), el('td', {className: 'r', textContent: num(d.res)}), el('td', {className: 'r', textContent: vnd(d.cpr)}), el('td', {className: 'r', textContent: num(d.camps)}));
+      tr.style.cursor = 'pointer'; tr.title = '';
+      tr.addEventListener('click', () => { reportDate = d.date; show('bao-cao'); renderReport(); });
+      td.append(tr);
+    }
+  }
+
+  // ---- charts (hand-drawn SVG) ----
+  const NS = 'http://www.w3.org/2000/svg';
+  const svgEl = (tag, attrs) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); return e; };
+  function frame(box, n) {
+    box.replaceChildren();
+    const W = Math.max(280, box.clientWidth || 600), H = 220, m = {l: 52, r: 10, t: 12, b: 26};
+    const svg = svgEl('svg', {viewBox: `0 0 ${W} ${H}`, width: '100%', role: 'img'});
+    box.append(svg);
+    const tip = el('div', {className: 'tip', hidden: true}); box.append(tip);
+    return {svg, tip, W, H, m, iw: W - m.l - m.r, ih: H - m.t - m.b};
+  }
+  function yAxis(f, max) {
+    const ticks = 4;
+    for (let i = 0; i <= ticks; i++) {
+      const v = max * i / ticks, y = f.m.t + f.ih - f.ih * i / ticks;
+      f.svg.append(svgEl('line', {x1: f.m.l, x2: f.W - f.m.r, y1: y, y2: y, stroke: 'var(--grid)', 'stroke-width': 1}));
+      const t = svgEl('text', {x: f.m.l - 8, y: y + 4, 'text-anchor': 'end'}); t.textContent = vndShort(v); f.svg.append(t);
+    }
+  }
+  function xLabels(f, days, xpos) {
+    const n = days.length, step = Math.max(1, Math.ceil(n / Math.max(2, Math.floor(f.iw / 56))));
+    for (let i = 0; i < n; i += step) { const t = svgEl('text', {x: xpos(i), y: f.H - 6, 'text-anchor': 'middle'}); t.textContent = fmtShort(days[i].date); f.svg.append(t); }
+  }
+  function placeTip(box, tip, e) {
+    const b = box.getBoundingClientRect(); tip.hidden = false;
+    const w = tip.offsetWidth, h = tip.offsetHeight;
+    let x = e.clientX - b.left + 12, y = e.clientY - b.top - h - 10;
+    if (x + w > b.width) x = Math.max(0, e.clientX - b.left - w - 12);
+    if (y < 0) y = Math.min(b.height - h, e.clientY - b.top + 14);
+    tip.style.left = x + 'px'; tip.style.top = y + 'px';
+  }
+  function drawBars(box, days) {
+    const f = frame(box);
+    const max = Math.max(1, ...days.map((d) => d.spend)) * 1.1;
+    if (!days.some((d) => d.spend > 0)) { box.replaceChildren(el('div', {className: 'empty', textContent: 'Không có chi tiêu trong khoảng này.'})); return; }
+    yAxis(f, max);
+    const n = days.length, bw = f.iw / n, gap = Math.min(4, bw * .25);
+    const xpos = (i) => f.m.l + bw * i + bw / 2;
+    days.forEach((d, i) => {
+      if (!d.spend) return;
+      const h = d.spend / max * f.ih;
+      const r = svgEl('rect', {x: f.m.l + bw * i + gap / 2, y: f.m.t + f.ih - h, width: Math.max(1, bw - gap), height: h, rx: Math.min(4, (bw - gap) / 2), fill: d.date === reportDate ? 'var(--bar-hi)' : 'var(--bar)'});
+      r.addEventListener('pointermove', (e) => { f.tip.replaceChildren(el('b', {textContent: fmtDate(d.date)}), el('div', {textContent: `Chi tiêu: ${vnd(d.spend)}`}), el('div', {textContent: `Kết quả: ${num(d.res)}${d.cpr ? ' · ' + vnd(d.cpr) : ''}`}), el('div', {textContent: `${d.camps} camp chạy`})); placeTip(box, f.tip, e); r.setAttribute('fill', 'var(--bar-hi)'); });
+      r.addEventListener('pointerleave', () => { f.tip.hidden = true; r.setAttribute('fill', d.date === reportDate ? 'var(--bar-hi)' : 'var(--bar)'); });
+      r.addEventListener('click', () => { reportDate = d.date; show('bao-cao'); renderReport(); });
+      r.style.cursor = 'pointer';
+      f.svg.append(r);
+    });
+    xLabels(f, days, xpos);
+  }
+  function drawLine(box, days, avg) {
+    const pts = days.map((d, i) => ({...d, i})).filter((d) => d.cpr != null);
+    if (!pts.length) { box.replaceChildren(el('div', {className: 'empty', textContent: 'Không có ngày nào ra kết quả trong khoảng này.'})); return; }
+    const f = frame(box);
+    const max = Math.max(...pts.map((p) => p.cpr), avg || 0) * 1.12;
+    yAxis(f, max);
+    const n = days.length, step = n > 1 ? f.iw / (n - 1) : 0;
+    const xpos = (i) => n > 1 ? f.m.l + step * i : f.m.l + f.iw / 2;
+    const ypos = (v) => f.m.t + f.ih - v / max * f.ih;
+    if (avg) { const y = ypos(avg); f.svg.append(svgEl('line', {x1: f.m.l, x2: f.W - f.m.r, y1: y, y2: y, stroke: 'var(--muted)', 'stroke-dasharray': '4 4'})); const t = svgEl('text', {x: f.W - f.m.r, y: y - 5, 'text-anchor': 'end'}); t.textContent = 'TB ' + vndShort(avg); f.svg.append(t); }
+    const d = pts.map((p, k) => `${k ? 'L' : 'M'}${xpos(p.i).toFixed(1)},${ypos(p.cpr).toFixed(1)}`).join('');
+    f.svg.append(svgEl('path', {d, fill: 'none', stroke: 'var(--rose)', 'stroke-width': 2, 'stroke-linejoin': 'round', 'stroke-linecap': 'round'}));
+    for (const p of pts) {
+      const c = svgEl('circle', {cx: xpos(p.i), cy: ypos(p.cpr), r: pts.length > 60 ? 2.5 : 3.5, fill: avg && p.cpr >= avg * 1.4 ? 'var(--bad)' : 'var(--rose)', stroke: 'var(--surface)', 'stroke-width': 1.5});
+      const hit = svgEl('circle', {cx: xpos(p.i), cy: ypos(p.cpr), r: 9, fill: 'transparent'});
+      hit.addEventListener('pointermove', (e) => { f.tip.replaceChildren(el('b', {textContent: fmtDate(p.date)}), el('div', {textContent: `Giá/kết quả: ${vnd(p.cpr)}`}), el('div', {textContent: `${num(p.res)} kết quả · chi ${vnd(p.spend)}`})); placeTip(box, f.tip, e); c.setAttribute('r', 5); });
+      hit.addEventListener('pointerleave', () => { f.tip.hidden = true; c.setAttribute('r', pts.length > 60 ? 2.5 : 3.5); });
+      f.svg.append(c, hit);
+    }
+    xLabels(f, days, xpos);
+  }
+  let rsT; window.addEventListener('resize', () => { clearTimeout(rsT); rsT = setTimeout(() => { if (!$('v-dashboard').hidden) renderDashboard(); }, 150); });
+
+  // ---------------- camp tab ----------------
+  function renderCamps() {
+    if (!acc) return;
+    const q = $('cq').value.trim().toLowerCase(), onlyRun = $('cOnlyRun').checked, onlySpend = $('cOnlySpend').checked;
+    let rows = campTot.map((c, ci) => ({...c, ci}));
+    if (onlyRun) rows = rows.filter(isRunning);
+    if (onlySpend) rows = rows.filter((c) => c.spend > 0);
+    if (q) rows = rows.filter((c) => c.campaign.toLowerCase().includes(q));
+    rows.sort((a, b) => (isRunning(b) - isRunning(a)) || (b.last || '').localeCompare(a.last || '') || b.spend - a.spend);
+    $('campCount').textContent = `${rows.length} / ${campTot.length} camp · ${campTot.filter(isRunning).length} đang bật`;
+    const tb = $('tCamp').tBodies[0]; tb.replaceChildren();
+    if (!rows.length) tb.append(el('tr', {}, el('td', {colSpan: 8, className: 'muted', textContent: 'Không có camp phù hợp bộ lọc.'})));
+    for (const c of rows) {
+      const counts = RES_TYPES.has(c.result_type);
+      tb.append(el('tr', {}, el('td', {className: 'cname', textContent: c.campaign}),
+        el('td', {}, el('span', {className: 'chip ' + (isRunning(c) ? 'good' : 'mute'), textContent: c.status || '—'})),
+        el('td', {className: 'r', textContent: c.daily_budget ? vnd(c.daily_budget) : '—'}),
+        el('td', {className: 'r', textContent: vnd(c.spend)}),
+        el('td', {className: 'r', textContent: counts ? num(c.res) : '—'}),
+        el('td', {className: 'r', textContent: counts && c.res ? vnd(c.spend / c.res) : '—'}),
+        el('td', {textContent: resLabel(c.result_type)}),
+        el('td', {className: 'r', textContent: c.last ? fmtDate(c.last) : '—'})));
+    }
+  }
+  ['cq', 'cOnlyRun', 'cOnlySpend'].forEach((id) => $(id).addEventListener(id === 'cq' ? 'input' : 'change', renderCamps));
+
+  // ---------------- recs ----------------
+  function ruleRecs() {
+    const to = lastDate(), b = agg(addDays(to, -29), to), avg = b.cpr, out = [];
+    for (const p of b.per.values()) {
+      if (!p.counts || !(p.spend > 0)) continue;
+      const c = acc.campaigns[p.ci], on = isRunning(c), cpr = p.res ? p.spend / p.res : null;
+      if (avg && !p.res && p.spend > 2 * avg) out.push({campaign: c.campaign, action: on ? 'Tắt' : 'Để tắt', kind: 'bad', budget_to: 0, reason: `30 ngày chi ${vnd(p.spend)} nhưng chưa ra kết quả.`});
+      else if (avg && cpr >= avg * 1.5) out.push({campaign: c.campaign, action: on ? 'Tắt' : 'Để tắt', kind: 'bad', budget_to: 0, reason: `Giá/kết quả ${vnd(cpr)}, gấp ${(cpr / avg).toFixed(1).replace('.', ',')} lần trung bình ${vnd(avg)}.`});
+      else if (avg && cpr <= avg && p.res >= 3) out.push({campaign: c.campaign, action: on ? 'Tăng 20% ngân sách' : 'Bật lại', kind: 'good', budget_to: c.daily_budget ? Math.round(on ? c.daily_budget * 1.2 : c.daily_budget) : null, reason: `Giá/kết quả ${vnd(cpr)}, rẻ hơn trung bình ${vnd(avg)} (${num(p.res)} kết quả).`});
+    }
+    return out.sort((x, y) => (x.kind === 'good' ? 0 : 1) - (y.kind === 'good' ? 0 : 1));
+  }
+  let recText = '';
+  function renderRecs() {
+    if (!acc) return;
+    const list = ruleRecs();
+    const box = $('recs'); box.replaceChildren(); $('recNote').textContent = '';
+    if (!list.length) { box.append(el('div', {className: 'empty', textContent: 'Chưa có đề xuất cho 30 ngày gần nhất.'})); recText = ''; return; }
+    for (const r of list) {
+      box.append(el('div', {className: 'rec', style: 'grid-template-columns:auto 1fr'},
+        el('span', {className: 'chip ' + r.kind, textContent: r.action}),
+        el('div', {}, el('div', {className: 'name', textContent: r.campaign}), el('div', {className: 'why', textContent: r.reason}),
+          r.budget_to != null ? el('div', {className: 'small num', style: 'margin-top:4px', textContent: r.budget_to === 0 ? 'Ngân sách: tắt' : `Ngân sách đề xuất: ${vnd(r.budget_to)}/ngày`}) : null)));
+    }
+    recText = `ĐỀ XUẤT TỐI ƯU – ${acc.name}\n` + list.map((r, i) => `${i + 1}. ${r.action}: ${r.campaign} — ${r.reason}`).join('\n');
+  }
+  $('copyRecs').addEventListener('click', () => {
+    const note = $('recNote');
+    if (!recText) return;
+    try { navigator.clipboard.writeText(recText).then(() => { note.className = 'msg ok'; note.textContent = 'Đã copy đề xuất.'; }, () => { note.className = 'msg'; note.textContent = 'Trình duyệt không cho copy tự động.'; }); } catch { note.textContent = 'Trình duyệt không cho copy tự động.'; }
+  });
+
+  // ---------------- views ----------------
+  const VIEWS = ['bao-cao', 'dashboard', 'camp', 'de-xuat'];
+  function show(v) {
+    if (!VIEWS.includes(v)) v = 'bao-cao';
+    for (const x of VIEWS) { $('v-' + x).hidden = x !== v; $('t-' + x).setAttribute('aria-selected', String(x === v)); }
+    if (location.hash.slice(1) !== v) history.replaceState(null, '', '#' + v);
+    renderView(v);
+  }
+  function renderView(v = VIEWS.find((x) => !$('v-' + x).hidden)) {
+    if (!acc) return;
+    if (v === 'bao-cao') renderReport();
+    else if (v === 'dashboard') { if (!range.from) setRange(range.preset || '30'); else renderDashboard(); }
+    else if (v === 'camp') renderCamps();
+    else renderRecs();
+  }
+  $$('.tab').forEach((b) => b.addEventListener('click', () => show(b.dataset.view)));
+  window.addEventListener('hashchange', () => show(location.hash.slice(1)));
+
+  // ---------------- BM / account pickers ----------------
+  function bmList() {
+    const m = new Map();
+    for (const a of accounts) { const k = a.bm_id || 'none'; if (!m.has(k)) m.set(k, {id: k, name: a.bm_name || 'Không thuộc BM', n: 0}); m.get(k).n++; }
+    return Array.from(m.values()).sort((a, b) => a.name.localeCompare(b.name, 'vi'));
+  }
+  function fillBm() {
+    const bms = bmList(), sel = $('bm');
+    const keep = sel.value && bms.some((b) => b.id === sel.value) ? sel.value : (accounts.find((a) => a._id === store.get('ads.acct'))?.bm_id || bms[0]?.id);
+    sel.replaceChildren(...bms.map((b) => el('option', {value: b.id, textContent: `${b.name} (${b.n} TK)`})));
+    if (keep) sel.value = keep;
+    fillAcct();
+  }
+  function fillAcct() {
+    const bm = $('bm').value, sel = $('acct');
+    const list = accounts.filter((a) => (a.bm_id || 'none') === bm).sort((a, b) => a.name.localeCompare(b.name, 'vi'));
+    const want = acc && list.some((a) => a._id === acc._id) ? acc._id : (list.find((a) => a._id === store.get('ads.acct'))?._id || list[0]?._id);
+    sel.replaceChildren(...list.map((a) => el('option', {value: a._id, textContent: `${a.name}${a.act_id ? ' · ' + a.act_id : ''}`})));
+    if (want) { sel.value = want; selectAcct(want); }
+  }
+  $('bm').addEventListener('change', () => { acc = null; fillAcct(); });
+  $('acct').addEventListener('change', (e) => selectAcct(e.target.value));
+
+  function selectAcct(id) {
+    const next = accounts.find((a) => a._id === id);
+    if (!next) return;
+    const changed = !acc || acc._id !== id;
+    acc = next;
+    store.set('ads.acct', id);
+    setSyncLine();
+    if (changed) {
+      daily = new Map(); campTot = (acc.campaigns || []).map((c) => ({...c, spend: 0, res: 0, last: null}));
+      reportDate = null; range = {from: null, to: null, preset: range.preset || '30'};
+      const seq = ++loadSeq;
+      $('sync').textContent = 'Đang tải số liệu…';
+      Promise.all((acc.months || []).map((mo) => loadEnc(`data/days/${id}__${mo}.json`).catch(() => null))).then((docs) => {
+        if (seq !== loadSeq) return;
+        buildFromMonths(docs.filter(Boolean));
+        reportDate = lastDate();
+        setSyncLine();
+        if (range.from) setRange(range.preset === 'custom' ? '30' : range.preset);
+        renderView();
+      });
+    }
+    if (!reportDate) reportDate = lastDate();
+    renderView();
+  }
+
+  function setSyncLine() {
+    if (!acc) return;
+    $('sync').textContent = `${acc.name} · BM ${acc.bm_name || '—'} · dữ liệu ${acc.first_date ? fmtDate(acc.first_date) : '—'} → ${fmtDate(lastDate())}`;
+    const w = [];
+    if (acc.error) w.push(`Lần cập nhật gần nhất của tài khoản này bị lỗi: ${acc.error}. Đang hiển thị số liệu cũ.`);
+    if (INDEX?.token_expires && INDEX.token_expires !== 'never') {
+      const days = Math.floor((new Date(INDEX.token_expires) - Date.now()) / 864e5);
+      if (days < 10) w.push(days < 0 ? 'Mã truy cập Meta đã hết hạn, trang không còn tự cập nhật. Hãy tạo mã mới theo hướng dẫn (mục 2).' : `Mã truy cập Meta sẽ hết hạn sau ${days} ngày. Hãy tạo mã mới theo hướng dẫn (mục 2).`);
+    }
+    if (INDEX?.synced_at && Date.now() - new Date(INDEX.synced_at) > 26 * 3600e3) w.push('Đã hơn một ngày trang chưa tự cập nhật. Kiểm tra tab Actions trên GitHub.');
+    $('warn').hidden = !w.length; $('warn').textContent = w.join(' ');
+  }
+
+  // ---------------- data (encrypted static files) ----------------
+  const b64 = (u8) => btoa(String.fromCharCode(...u8));
+  const unb64 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
+  async function deriveKey(password, salt, iter) {
+    const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveKey']);
+    return crypto.subtle.deriveKey({name: 'PBKDF2', salt: unb64(salt), iterations: iter, hash: 'SHA-256'}, base, {name: 'AES-GCM', length: 256}, true, ['decrypt']);
+  }
+  async function decrypt(key, box) {
+    const pt = await crypto.subtle.decrypt({name: 'AES-GCM', iv: unb64(box.iv)}, key, unb64(box.ct));
+    return JSON.parse(new TextDecoder().decode(pt));
+  }
+  async function getJSON(url, bust) {
+    const r = await fetch(url + (bust ? `?v=${bust}` : `?t=${Date.now()}`), {cache: bust ? 'default' : 'no-store'});
+    if (!r.ok) throw new Error(`Không tải được ${url}`);
+    return r.json();
+  }
+  async function loadEnc(rel) { return decrypt(KEY, await getJSON(rel, MANI.files[rel.replace(/^data\//, '')])); }
+
+  let META = null;
+  async function unlockWith(key) {
+    await decrypt(key, META.check); // sai mật khẩu => lỗi
+    KEY = key;
+    MANI = await getJSON('data/manifest.json').catch(() => ({files: {}}));
+    INDEX = await decrypt(KEY, await getJSON('data/index.json'));
+    accounts = (INDEX.accounts || []).map((a) => ({...a, _id: a.id}));
+    const t = new Date(INDEX.synced_at);
+    $('autoSync').textContent = `Tự cập nhật lần cuối ${t.toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'})} ngày ${t.toLocaleDateString('vi-VN')}`;
+    $('lock').hidden = true; $('app').hidden = false;
+    show(location.hash.slice(1) || 'bao-cao');
+    if (!accounts.length) { $('sync').textContent = 'Chưa có tài khoản nào. Kiểm tra mã truy cập Meta.'; return; }
+    fillBm();
+  }
+  $('lockForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = $('pwBtn'); btn.disabled = true; $('pwErr').textContent = '';
+    try {
+      const key = await deriveKey($('pw').value, META.salt, META.iter);
+      await unlockWith(key);
+      try { localStorage.setItem('ads.key', b64(new Uint8Array(await crypto.subtle.exportKey('raw', key))) + '|' + META.salt); } catch {}
+    } catch (err) { $('pwErr').textContent = META ? 'Mật khẩu không đúng.' : 'Chưa có dữ liệu. Hãy chạy đồng bộ lần đầu trên GitHub.'; }
+    finally { btn.disabled = false; }
+  });
+  $('logout').addEventListener('click', () => { try { localStorage.removeItem('ads.key'); } catch {} location.reload(); });
+
+  async function boot() {
+    try { META = await getJSON('data/meta.json'); } catch { META = null; }
+    if (META) {
+      let saved = null; try { saved = localStorage.getItem('ads.key'); } catch {}
+      if (saved) {
+        const [k, salt] = saved.split('|');
+        if (salt === META.salt) {
+          try { await unlockWith(await crypto.subtle.importKey('raw', unb64(k), 'AES-GCM', true, ['decrypt'])); return; } catch {}
+        }
+      }
+    }
+    $('lock').hidden = false;
+    if (!META) $('pwErr').textContent = 'Chưa có dữ liệu. Hãy chạy đồng bộ lần đầu trên GitHub (xem HUONG-DAN.md).';
+    $('pw').focus();
+  }
+  boot();
+})();
+</script>
+</body>
+</html>
