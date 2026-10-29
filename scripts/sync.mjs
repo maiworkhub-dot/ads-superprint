@@ -230,7 +230,20 @@ export async function run(env = process.env) {
     try { const r = await g.get('', { ids: chunk.join(','), fields: 'name' }); for (const [k, v] of Object.entries(r || {})) if (v?.name) pages[k] = v.name; }
     catch { for (const pid of chunk) { try { const r = await g.get(pid, { fields: 'name' }); if (r?.name) pages[pid] = r.name; } catch { /* không đọc được tên */ } } }
   }
-  log(`Fanpage: ${allPages.size} page, đọc được tên ${Object.keys(pages).length}.`);
+  // page của BM khách: đọc tên công khai từ trang Facebook
+  const dec = (s) => s.replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#039;|&#39;/g, "'").replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCodePoint(parseInt(h, 16))).replace(/&#(\d+);/g, (_, d) => String.fromCodePoint(+d)).trim();
+  const bad = /^(facebook|log in|đăng nhập|content not found|error|trang|page not found)/i;
+  for (const pid of [...allPages].filter((p) => !pages[p])) {
+    for (const [url, ua] of [[`https://www.facebook.com/${pid}`, 'facebookexternalhit/1.1'], [`https://m.facebook.com/${pid}`, 'facebookexternalhit/1.1'], [`https://www.facebook.com/profile.php?id=${pid}`, 'Mozilla/5.0']]) {
+      try {
+        const html = await (await fetch(url, { headers: { 'user-agent': ua, 'accept-language': 'vi,en' }, redirect: 'follow' })).text();
+        const m = html.match(/<meta[^>]+property="og:title"[^>]+content="([^"]+)"/i) || html.match(/<title[^>]*>([^<]+)<\/title>/i);
+        const name = m && dec(m[1]).replace(/\s*[|\-–]\s*Facebook$/i, '');
+        if (name && !bad.test(name)) { pages[pid] = name; break; }
+      } catch { /* thử cách khác */ }
+    }
+  }
+  log(`Fanpage: ${allPages.size} page, đọc được tên ${Object.keys(pages).length}. Thiếu: ${[...allPages].filter((p) => !pages[p]).join(', ') || 'không'}`);
   const out = { synced_at: new Date().toISOString(), token_expires: tokenExpires, api_version: version, pages, accounts: outAccounts };
   await fs.mkdir(DATA, { recursive: true });
   await fs.writeFile(path.join(DATA, 'index.json'), JSON.stringify(await encryptJSON(key, out)));
