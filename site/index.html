@@ -177,6 +177,8 @@ button { font: inherit; cursor: pointer; border-radius: 999px; padding: 8px 16px
 .grid2 { display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); }
 
 /* tables */
+.tbl-day { max-height: 75vh; }
+.tbl-day td, .tbl-day th { padding-top: 10px; padding-bottom: 10px; }
 .tbl { overflow: auto; max-height: 520px; border: 1px solid var(--line); border-radius: var(--r-sm); }
 table { width: 100%; border-collapse: collapse; font-size: .84rem; font-variant-numeric: tabular-nums; }
 th { position: sticky; top: 0; background: var(--surface-2); text-align: left; font-weight: 500; color: var(--muted); padding: 9px 12px; white-space: nowrap; font-size: .76rem; z-index: 1; }
@@ -385,15 +387,15 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
         </tr></thead><tbody></tbody></table></div>
       </div>
 
-      <div class="grid2">
-        <div class="card">
-          <h3>Tổng hợp theo tháng</h3>
-          <div class="tbl" style="margin-top:12px"><table id="tMonth"><thead><tr><th>Tháng</th><th class="r">Chi tiêu</th><th class="r">Kết quả</th><th class="r">CPL</th><th class="r">CTR</th><th class="r">Camp</th></tr></thead><tbody></tbody></table></div>
-        </div>
-        <div class="card">
-          <h3>Nhật ký từng ngày</h3>
-          <div class="tbl" style="margin-top:12px"><table id="tDay"><thead><tr><th>Ngày</th><th class="r">Chi tiêu</th><th class="r">Kết quả</th><th class="r">CPL</th><th class="r">CTR</th><th class="r">Camp chạy</th></tr></thead><tbody></tbody></table></div>
-        </div>
+      <div class="card">
+        <div class="card-head"><h3>Báo cáo từng ngày</h3><span class="muted small" id="dayCount"></span></div>
+        <p class="note" style="margin-top:4px">Mới nhất ở trên. Màu xanh/đỏ so với trung bình khoảng đang xem. Bấm vào một ngày để mở báo cáo ngày đó.</p>
+        <div class="tbl tbl-day" style="margin-top:12px"><table id="tDay"><thead><tr><th>Ngày</th><th class="r">Chi tiêu</th><th class="r">Kết quả</th><th class="r">CPL</th><th class="r">CTR</th><th class="r">CPM</th><th class="r">CPC</th><th class="r">Hiển thị</th><th class="r">Click</th><th class="r">Camp chạy</th></tr></thead><tbody></tbody></table></div>
+      </div>
+
+      <div class="card">
+        <h3>Tổng hợp theo tháng</h3>
+        <div class="tbl" style="margin-top:12px"><table id="tMonth"><thead><tr><th>Tháng</th><th class="r">Chi tiêu</th><th class="r">Kết quả</th><th class="r">CPL</th><th class="r">CTR</th><th class="r">Camp</th></tr></thead><tbody></tbody></table></div>
       </div>
     </div>
   </section>
@@ -820,7 +822,7 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
     const days = [];
     for (let d = from; d <= to; d = addDays(d, 1)) {
       const x = a.byDay.get(d);
-      days.push({date: d, spend: x?.spend || 0, res: x?.res || 0, cpr: x && x.res ? x.resSpend / x.res : null, ctr: x && x.imp ? x.clicks / x.imp : null, cpm: x && x.imp ? x.spend / x.imp * 1000 : null, camps: x?.camps || 0});
+      days.push({date: d, spend: x?.spend || 0, res: x?.res || 0, imp: x?.imp || 0, clicks: x?.clicks || 0, cpr: x && x.res ? x.resSpend / x.res : null, ctr: x && x.imp ? x.clicks / x.imp : null, cpm: x && x.imp ? x.spend / x.imp * 1000 : null, cpc: x && x.clicks ? x.spend / x.clicks : null, camps: x?.camps || 0});
       if (days.length > 2000) break;
     }
     drawBars($('chSpend'), days, 'spend', vnd);
@@ -873,9 +875,10 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
     // day log
     const td = $('tDay').tBodies[0]; td.replaceChildren();
     const drows = days.filter((d) => d.spend > 0 || d.res > 0).reverse();
-    if (!drows.length) td.append(el('tr', {}, el('td', {colSpan: 6, className: 'muted', textContent: 'Không có ngày nào chi tiêu trong khoảng này.'})));
+    $('dayCount').textContent = `${drows.length} ngày có chi tiêu`;
+    if (!drows.length) td.append(el('tr', {}, el('td', {colSpan: 10, className: 'muted', textContent: 'Không có ngày nào chi tiêu trong khoảng này.'})));
     for (const d of drows) {
-      const tr = el('tr', {}, el('td', {textContent: fmtDate(d.date)}), el('td', {className: 'r', textContent: vnd(d.spend)}), el('td', {className: 'r', textContent: num(d.res)}), el('td', {className: cc(d.cpr, a.cpr, true), textContent: vnd(d.cpr)}), el('td', {className: 'r', textContent: pct(d.ctr)}), el('td', {className: 'r', textContent: num(d.camps)}));
+      const tr = el('tr', {}, el('td', {textContent: `${WD[D(d.date).getUTCDay()]}, ${fmtDate(d.date)}`, style: 'white-space:nowrap'}), el('td', {className: 'r', textContent: vnd(d.spend)}), el('td', {className: 'r', textContent: num(d.res)}), el('td', {className: cc(d.cpr, a.cpr, true), textContent: vnd(d.cpr)}), el('td', {className: cc(d.ctr, a.ctr, false), textContent: pct(d.ctr)}), el('td', {className: cc(d.cpm, a.cpm, true), textContent: vnd(d.cpm)}), el('td', {className: cc(d.cpc, a.cpc, true), textContent: vnd(d.cpc)}), el('td', {className: 'r', textContent: num(d.imp)}), el('td', {className: 'r', textContent: num(d.clicks)}), el('td', {className: 'r', textContent: num(d.camps)}));
       tr.style.cursor = 'pointer';
       tr.addEventListener('click', () => { reportDate = d.date; show('bao-cao'); renderReport(); });
       td.append(tr);
