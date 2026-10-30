@@ -323,6 +323,7 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
         <div class="flt-row">
           <span class="flt-k">Thời gian</span>
           <div class="range" role="group" aria-label="Khoảng thời gian">
+            <button class="btn-soft rp" data-r="camps" title="Từ ngày chạy sớm nhất của các camp đang chọn đến hôm nay">Từ khi camp chạy</button>
             <button class="btn-soft rp" data-r="1">Hôm nay</button>
             <button class="btn-soft rp" data-r="7">7 ngày</button>
             <button class="btn-soft rp" data-r="30">30 ngày</button>
@@ -478,7 +479,7 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
         if (counts) { d.res += res; d.resSpend += spend; }
         d.camps.set(ci, {ci, spend, imp, clicks, res: counts ? res : 0, counts});
         const t = campTot[ci]; t.spend += spend; t.imp += imp; t.clicks += clicks; if (counts) t.res += res;
-        if (spend > 0) { t.days++; if (!t.last || date > t.last) t.last = date; }
+        if (spend > 0) { t.days++; if (!t.last || date > t.last) t.last = date; if (!t.first || date < t.first) t.first = date; }
       }
     }
   }
@@ -699,6 +700,11 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
   function setRange(preset) {
     const to = lastDate();
     if (preset === 'all') range = {from: firstDate(), to, preset};
+    else if (preset === 'camps') {
+      const ids = dashSel ? [...dashSel] : dashCamps().map((x) => x.ci);
+      const firsts = ids.map((ci) => campTot[ci]?.first).filter(Boolean).sort();
+      range = {from: firsts[0] || firstDate(), to, preset};
+    }
     else if (preset === 'month') range = {from: to.slice(0, 8) + '01', to, preset};
     else if (preset === 'year') range = {from: to.slice(0, 4) + '-01-01', to, preset};
     else if (preset === 'custom') {}
@@ -766,6 +772,7 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
 
   function renderDashboard() {
     if (!acc || !range.from) return;
+    if (range.preset === 'camps' && !renderDashboard.busy) { renderDashboard.busy = true; try { setRange('camps'); } finally { renderDashboard.busy = false; } return; }
     const {from, to} = range;
     const a = aggSel(from, to);
     const nDays = Math.round((D(to) - D(from)) / 864e5) + 1;
