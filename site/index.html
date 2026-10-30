@@ -502,24 +502,25 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
     const m = (x) => ({cpm: x.imp ? x.spend / x.imp * 1000 : null, ctr: x.imp ? x.clicks / x.imp : null, cvr: x.clicks ? x.res / x.clicks : null});
     const t = m(p), B = m(base), own = bench.per.get(p.ci), O = own ? m(own) : {};
     const P = (v) => v == null ? '—' : (v * 100).toFixed(v < 0.1 ? 2 : 1) + '%';
-    const out = [];
-    if (p.imp < 500 && p.res < 2) out.push(`Dữ liệu còn ít (${num(p.imp)} hiển thị) – chưa đủ để kết luận chắc chắn.`);
+    const out = [], sh = [];
+    if (p.imp < 500 && p.res < 2) { out.push(`Dữ liệu còn ít (${num(p.imp)} hiển thị) – chưa đủ để kết luận chắc chắn.`); sh.push('dữ liệu còn ít'); }
     const r = (a, b) => (a != null && b) ? a / b : null;
     const rc = r(t.cpm, B.cpm), rt = r(t.ctr, B.ctr), rv = r(t.cvr, B.cvr);
     if (good) {
-      if (rc != null && rc <= 0.85) out.push(`CPM rẻ ${vnd(t.cpm)} (TB ${vnd(B.cpm)}): tệp đối tượng rộng/ít cạnh tranh, Meta phân phối với giá thấp.`);
-      if (rt != null && rt >= 1.15) out.push(`CTR cao ${P(t.ctr)} (TB ${P(B.ctr)}): hình/video và tiêu đề thu hút đúng người xem.`);
-      if (rv != null && rv >= 1.15) out.push(`Tỷ lệ ra kết quả cao ${P(t.cvr)} số click (TB ${P(B.cvr)}): ưu đãi rõ, form/kịch bản inbox chốt tốt.`);
-      if (out.length === 0 || (out.length === 1 && /Dữ liệu còn ít/.test(out[0]))) out.push(`CPM, CTR và tỷ lệ ra kết quả đều nhỉnh hơn trung bình một chút nên giá/kết quả rẻ hơn.`);
+      if (rc != null && rc <= 0.85) { out.push(`CPM rẻ ${vnd(t.cpm)} (TB ${vnd(B.cpm)}): tệp đối tượng rộng/ít cạnh tranh, Meta phân phối với giá thấp.`); sh.push('CPM rẻ, tệp rộng'); }
+      if (rt != null && rt >= 1.15) { out.push(`CTR cao ${P(t.ctr)} (TB ${P(B.ctr)}): hình/video và tiêu đề thu hút đúng người xem.`); sh.push('CTR cao, nội dung thu hút'); }
+      if (rv != null && rv >= 1.15) { out.push(`Tỷ lệ ra kết quả cao ${P(t.cvr)} số click (TB ${P(B.cvr)}): ưu đãi rõ, form/kịch bản inbox chốt tốt.`); sh.push('tỷ lệ ra lead cao'); }
+      if (out.length === 0 || (out.length === 1 && /Dữ liệu còn ít/.test(out[0]))) { out.push(`CPM, CTR và tỷ lệ ra kết quả đều nhỉnh hơn trung bình một chút nên giá/kết quả rẻ hơn.`); sh.push('chi phí ổn định'); }
     } else {
-      if (p.res === 0 && p.clicks === 0) out.push(`Chưa có lượt click nào sau ${num(p.imp)} hiển thị: nội dung chưa khiến người xem bấm vào.`);
-      else if (p.res === 0) out.push(`Có ${num(p.clicks)} click nhưng 0 kết quả: kiểm tra form/trang đích, nút nhắn tin, tốc độ trả lời inbox.`);
-      if (rc != null && rc >= 1.15) out.push(`CPM đắt ${vnd(t.cpm)} (TB ${vnd(B.cpm)}): tệp quá hẹp, cạnh tranh cao hoặc quảng cáo bị Meta đánh giá thấp → mở rộng tệp, thử mẫu mới.`);
-      if (rt != null && rt <= 0.85) out.push(`CTR thấp ${P(t.ctr)} (TB ${P(B.ctr)}): hình/video, tiêu đề chưa đủ hấp dẫn → thay nội dung mới.`);
-      if (O.ctr && t.ctr != null && t.ctr <= O.ctr * 0.75 && !(rt != null && rt <= 0.85)) out.push(`CTR giảm so với chính camp này 30 ngày (${P(t.ctr)} so với ${P(O.ctr)}): người xem đã nhàm quảng cáo → làm mới nội dung.`);
-      if (p.res > 0 && rv != null && rv <= 0.85) out.push(`Có click nhưng ít ra kết quả: ${P(t.cvr)} số click (TB ${P(B.cvr)}) → xem lại ưu đãi, form/trang đích, cách tư vấn inbox.`);
-      if (out.length === 0 || (out.length === 1 && /Dữ liệu còn ít/.test(out[0]))) out.push(`CPM, CTR, tỷ lệ ra kết quả đều kém trung bình một chút, cộng lại thành đắt. So sánh ngày mai trước khi tắt.`);
+      if (p.res === 0 && p.clicks === 0) { out.push(`Chưa có lượt click nào sau ${num(p.imp)} hiển thị: nội dung chưa khiến người xem bấm vào.`); sh.push('chưa có click'); }
+      else if (p.res === 0) { out.push(`Có ${num(p.clicks)} click nhưng 0 kết quả: kiểm tra form/trang đích, nút nhắn tin, tốc độ trả lời inbox.`); sh.push('có click nhưng chưa ra lead'); }
+      if (rc != null && rc >= 1.15) { out.push(`CPM đắt ${vnd(t.cpm)} (TB ${vnd(B.cpm)}): tệp quá hẹp, cạnh tranh cao hoặc quảng cáo bị Meta đánh giá thấp → mở rộng tệp, thử mẫu mới.`); sh.push('CPM đắt, tệp hẹp'); }
+      if (rt != null && rt <= 0.85) { out.push(`CTR thấp ${P(t.ctr)} (TB ${P(B.ctr)}): hình/video, tiêu đề chưa đủ hấp dẫn → thay nội dung mới.`); sh.push('CTR thấp, nội dung chưa thu hút'); }
+      if (O.ctr && t.ctr != null && t.ctr <= O.ctr * 0.75 && !(rt != null && rt <= 0.85)) { out.push(`CTR giảm so với chính camp này 30 ngày (${P(t.ctr)} so với ${P(O.ctr)}): người xem đã nhàm quảng cáo → làm mới nội dung.`); sh.push('người xem đã nhàm quảng cáo'); }
+      if (p.res > 0 && rv != null && rv <= 0.85) { out.push(`Có click nhưng ít ra kết quả: ${P(t.cvr)} số click (TB ${P(B.cvr)}) → xem lại ưu đãi, form/trang đích, cách tư vấn inbox.`); sh.push('nhiều click nhưng ít ra lead'); }
+      if (out.length === 0 || (out.length === 1 && /Dữ liệu còn ít/.test(out[0]))) { out.push(`CPM, CTR, tỷ lệ ra kết quả đều kém trung bình một chút, cộng lại thành đắt. So sánh ngày mai trước khi tắt.`); sh.push('các chỉ số đều kém nhẹ'); }
     }
+    out.short = (sh.length > 1 ? sh.filter((x) => x !== 'dữ liệu còn ít') : sh).slice(0, 2).join(', ');
     return out;
   }
   function dayAnalysis(date) {
@@ -609,17 +610,20 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
     list($('rpSug'), a.sug, (s) => el('li', {textContent: s}), '');
     $('rpBench').textContent = a.avg ? `TB 30 ngày: ${vnd(a.avg)}/${resWord}` : 'Chưa đủ dữ liệu 30 ngày';
 
-    // message
+    // message (gọn cho sếp; tên camp giữ nguyên đầy đủ)
+    const đ = (v) => v == null || !isFinite(v) ? '—' : NF.format(Math.round(v)) + 'đ';
+    const [yy, mm, dd] = date.split('-');
     const lines = [];
-    lines.push(`BÁO CÁO ADS ${fmtDate(date)} – ${acc.name}${partial ? ` (tạm tính đến ${acc.synced_time || 'hiện tại'})` : ''}`);
-    lines.push(`• Camp có chi tiêu: ${ran} | Không chi tiêu: ${a.total - ran}${a.isLatest ? ` | Đang bật: ${a.runNow}` : ''}`);
-    lines.push(`• Chi tiêu: ${vnd(t.spend)}${dS ? ` (${dS} so với hôm trước)` : ''}`);
-    lines.push(`• Kết quả: ${num(t.res)} ${resWord}${t.cpr ? ` | Giá/${resWord}: ${vnd(t.cpr)}` : ''}${a.avg ? ` (TB 30 ngày ${vnd(a.avg)})` : ''}`);
-    if (t.imp) lines.push(`• Tổng: CTR ${pct(t.ctr)} | CPM ${vnd(t.cpm)} | CPC ${vnd(t.cpc)} | ${num(t.imp)} hiển thị`);
-    if (rows.length) { lines.push('Chi tiết từng camp:'); for (const x of rows) lines.push(`- ${cname(x.ci)}: chi ${vnd(x.spend)}${x.counts ? ` | ${num(x.res)} ${resLabel(acc.campaigns[x.ci].result_type)} | CPL ${vnd(cpl(x))}` : ''} | CTR ${pct(x.imp ? x.clicks / x.imp : null)} | CPM ${vnd(x.imp ? x.spend / x.imp * 1000 : null)} | CPC ${vnd(x.clicks ? x.spend / x.clicks : null)}`); }
-    if (a.good.length) { lines.push('✔ Hiệu quả:'); for (const x of a.good) { lines.push(`- ${cname(x.ci)} (${vnd(x.spend / x.res)}/kết quả)`); for (const w of x.why || []) lines.push(`   → ${w}`); } }
-    if (a.bad.length) { lines.push('✘ Chưa hiệu quả:'); for (const x of a.bad) { lines.push(`- ${cname(x.ci)} (${x.res ? vnd(x.spend / x.res) + '/kết quả' : '0 kết quả'})`); for (const w of x.why || []) lines.push(`   → ${w}`); } }
-    lines.push(`→ Đề xuất: ${a.sug.join(' ')}`);
+    lines.push(`📊 BÁO CÁO ADS ${dd}/${mm} | SUPERPRINT${partial ? ` (tạm tính đến ${acc.synced_time || 'hiện tại'})` : ''}`, '');
+    lines.push(`💰 Chi phí: ${đ(t.spend)}`, '');
+    const resRows = rows.filter((x) => x.counts).sort((x, y) => y.res - x.res || (x.res ? x.spend / x.res : 1e15) - (y.res ? y.spend / y.res : 1e15));
+    lines.push(`🎯 Kết quả: ${num(t.res)} ${resWord}${t.cpr ? ` – CPL ${đ(t.cpr)}` : ''}`);
+    for (const x of resRows) { const w = resLabel(acc.campaigns[x.ci].result_type); lines.push(x.res ? `• ${cname(x.ci)}: ${num(x.res)} ${w} – CPL ${đ(x.spend / x.res)}` : `• ${cname(x.ci)}: 0 ${w} – đã chi ${đ(x.spend)}`); }
+    lines.push('', `▶️ Camp đang chạy: ${ran} – Hiệu quả: ${a.good.length} | Chưa hiệu quả: ${a.bad.length}`);
+    const per1 = (x) => `${đ(x.spend / x.res)}/${resLabel(acc.campaigns[x.ci].result_type)}`;
+    if (a.good.length) { lines.push('', '✅ Hiệu quả:'); for (const x of a.good) lines.push(`• ${cname(x.ci)} – ${per1(x)}${x.why?.short ? `: ${x.why.short.replace(/lead/g, resLabel(acc.campaigns[x.ci].result_type))}` : ''}`); }
+    if (a.bad.length) { lines.push('', '⚠️ Chưa hiệu quả:'); for (const x of a.bad) lines.push(`• ${cname(x.ci)} – ${x.res ? per1(x) : `0 ${resLabel(acc.campaigns[x.ci].result_type)}, đã chi ${đ(x.spend)}`}${x.why?.short ? ` (giả định: ${x.why.short.replace(/lead/g, resLabel(acc.campaigns[x.ci].result_type))})` : ''}`); }
+    lines.push('', '👉 Đề xuất:'); a.sug.forEach((sg, k) => lines.push(`${k + 1}. ${sg.replace(/ ₫/g, 'đ')}`));
     $('msgText').textContent = lines.join('\n');
     $('dPick').value = date;
     $('dPick').min = firstDate(); $('dPick').max = lastDate();
