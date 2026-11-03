@@ -403,15 +403,15 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
   <!-- ===== Camp ===== -->
   <section id="v-camp" class="view" hidden>
     <div class="card cmd" id="cmdCard" style="margin-bottom:20px">
-      <div class="card-head"><h2>Ra lệnh bật / tắt camp</h2><div class="row" style="gap:12px"><button class="btn-main" id="fbLogin" type="button">Đăng nhập Facebook</button><button class="linkbtn" id="cmdTokBtn" type="button">Dùng mã thủ công</button></div></div>
+      <div class="card-head"><h2>Ra lệnh: bật / tắt / ngân sách camp</h2><div class="row" style="gap:12px"><button class="btn-main" id="fbLogin" type="button">Đăng nhập Facebook</button><button class="linkbtn" id="cmdTokBtn" type="button">Dùng mã thủ công</button></div></div>
       <p class="small muted" id="fbState" aria-live="polite" style="margin:0 0 10px"></p>
       <div id="cmdTok" hidden>
         <p class="note">(Chỉ cần khi không đăng nhập Facebook được.) Để bật/tắt camp, trang cần một mã Meta có quyền <b>ads_management</b>. Mã chỉ lưu trong trình duyệt này, không gửi đi đâu ngoài Meta. Lấy mã: Graph API Explorer → app Ads Superprint → thêm quyền ads_management, ads_read → Generate Access Token → ⓘ → Mã truy cập mở rộng → copy.</p>
         <div class="row"><input type="password" id="wtok" placeholder="Dán mã truy cập Meta (EAA…)" aria-label="Mã truy cập Meta có quyền ads_management" autocomplete="off" style="flex:1;min-width:200px"><button class="btn-main" id="wtokSave" type="button">Lưu mã</button><button class="btn-soft" id="wtokDel" type="button">Xoá mã</button></div>
         <p class="msg" id="wtokMsg" aria-live="polite"></p>
       </div>
-      <textarea id="cmdIn" placeholder="Ví dụ: tắt Test tổng 1, Test tổng 2; bật Tin nhắn T6&#10;Hoặc: tắt tất cả camp đang chạy" aria-label="Lệnh bật/tắt camp"></textarea>
-      <p class="hint">Gõ <b>tắt</b> hoặc <b>bật</b> + tên camp (gõ một phần tên là đủ), nhiều camp cách nhau bằng dấu phẩy, nhiều lệnh cách nhau bằng dấu chấm phẩy hoặc xuống dòng. Nhấn <b>Enter</b> để xem trước (Shift + Enter để xuống dòng). Tìm camp trong tài khoản đang chọn trước, không thấy thì tìm ở mọi tài khoản. Có thể viết “Tắt:” ở một dòng rồi liệt kê tên camp ở các dòng dưới.</p>
+      <textarea id="cmdIn" placeholder="Ví dụ: tắt Test tổng 1, Test tổng 2; bật Tin nhắn T6&#10;Đặt ngân sách camp Test tổng 3 300k · Tăng 20% ngân sách camp Test tổng 1 · Giảm ngân sách camp X 50k" aria-label="Lệnh bật/tắt camp"></textarea>
+      <p class="hint"><b>Ngân sách:</b> “đặt ngân sách camp X 300k” (số/ngày, viết 300k, 1tr, 1,5tr), “tăng 20% ngân sách camp X”, “giảm ngân sách camp X 50k”. Camp chia ngân sách ở nhóm quảng cáo thì web đổi từng nhóm theo tỷ lệ. <br><b>Bật/tắt:</b> gõ <b>tắt</b> hoặc <b>bật</b> + tên camp (gõ một phần tên là đủ), nhiều camp cách nhau bằng dấu phẩy, nhiều lệnh cách nhau bằng dấu chấm phẩy hoặc xuống dòng. Nhấn <b>Enter</b> để xem trước (Shift + Enter để xuống dòng). Tìm camp trong tài khoản đang chọn trước, không thấy thì tìm ở mọi tài khoản. Có thể viết “Tắt:” ở một dòng rồi liệt kê tên camp ở các dòng dưới.</p>
       <div id="cmdPlan"></div>
     </div>
     <div class="card">
@@ -1107,70 +1107,161 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
   });
   $('wtokDel').addEventListener('click', () => { wtok.set(''); $('wtokMsg').className = 'msg'; $('wtokMsg').textContent = 'Đã xoá mã khỏi trình duyệt.'; });
 
+  // ---- tìm camp theo tên ----
+  function findCamps(t, to, here, everywhere) {
+    const nt = norm(t);
+    if (/^(tat ca|het|all)\b/.test(nt)) {
+      const extra = nt.replace(/^(tat ca|het|all)\s*(cac\s+)?(cam|camp|campaign)?\s*/, '');
+      return here.filter((x) => (to === 'PAUSED' ? isRunning(x.c) : to === 'ACTIVE' ? !isRunning(x.c) : isRunning(x.c)) && (!extra || /^dang (chay|bat)$/.test(extra) || norm(x.c.campaign).includes(extra.replace(/^co (chu|ten)\s+/, ''))));
+    }
+    const hits = here.filter((x) => norm(x.c.campaign).includes(nt));
+    return hits.length ? hits : everywhere.filter((x) => norm(x.c.campaign).includes(nt));
+  }
+  const splitNames = (rest) => rest.split(/\s*,\s*|\s+và\s+|\s+va\s+/i).map((x) => x.trim().replace(/^[\s"“”'•\-–*:]+|[\s"“”'.:]+$/g, '')).filter((x) => norm(x).length >= 2);
+  // ---- lệnh ngân sách: "đặt ngân sách camp X 300k", "tăng 20% ngân sách camp X", "giảm ngân sách camp X 50k" ----
+  const AMT = /(\d[\d.,]*)\s*(%|k|nghìn|ngàn|nghin|ngan|tr|triệu|trieu|m|đ|d|vnd|đồng|dong)?\s*(\/\s*ngày|\/\s*ngay|mỗi ngày|moi ngay|một ngày|1 ngày)?\s*$/i;
+  function parseAmount(numTxt, unit) {
+    unit = norm(unit || '');
+    let v;
+    if (/^(k|nghin|ngan|tr|trieu|m)$/.test(unit) || unit === '%') v = parseFloat(numTxt.replace(/\.(?=\d{3}(\D|$))/g, '').replace(',', '.'));
+    else v = parseFloat(numTxt.replace(/[.,](?=\d{3}(\D|$))/g, '').replace(',', '.'));
+    if (!isFinite(v)) return null;
+    if (unit === '%') return {pct: v};
+    if (/^(k|nghin|ngan)$/.test(unit)) v *= 1e3; else if (/^(tr|trieu|m)$/.test(unit)) v *= 1e6;
+    return {val: Math.round(v)};
+  }
+  function parseBudget(clause) {
+    let txt = clause.trim();
+    const n = norm(txt);
+    const op = /^tang\b/.test(n) ? 'inc' : /^giam\b/.test(n) ? 'dec' : 'set';
+    let amt = null, head = txt;
+    // dạng "tăng 20% ngân sách camp X"
+    const lead = txt.match(/^(tăng|giảm|tang|giam)\s+(\d[\d.,]*)\s*(%|k|nghìn|ngàn|tr|triệu|m)?\s+/i);
+    if (lead) { amt = parseAmount(lead[2], lead[3]); head = txt.slice(lead[0].length); }
+    let toTarget = false;
+    if (!lead) { const m = txt.match(AMT); if (m) { amt = parseAmount(m[1], m[2]); head = txt.slice(0, m.index); toTarget = /(lên|len|xuống|xuong|thành|thanh|còn|con|ở mức|o muc|mức|muc|=)\s*$/i.test(head); } }
+    if (!amt) return {err: `Thiếu số tiền hoặc % trong lệnh “${clause}” (ví dụ 300k, 1tr, 20%).`};
+    head = head.replace(/^\s*(đặt|dat|set|chỉnh|chinh|sửa|sua|đổi|doi|tăng|tang|giảm|giam)\s*/i, '')
+      .replace(/\s*(ngân sách|ngan sach|budget)\s*(hàng ngày|hang ngay|mỗi ngày|moi ngay)?\s*/gi, ' ')
+      .replace(/^\s*(của|cua|cho)\s+/i, '').replace(/^\s*(các|cac)?\s*(camp|cam|campaign)\s+/i, '');
+    for (let k = 0; k < 3; k++) head = head.replace(/\s+(lên|len|xuống|xuong|thành|thanh|là|la|=|thêm|them|bớt|bot|ở mức|o muc|mức|muc|đến|den|tới|toi|:)\s*$/i, '').trim();
+    head = head.replace(/[\s=:]+$/, '');
+    if (op === 'set' && amt.pct != null) return {err: `“Đặt” ngân sách cần số tiền, không phải %. Dùng “tăng/giảm ${amt.pct}%”.`};
+    if (toTarget && amt.val != null) return {op: 'set', ...amt, names: splitNames(head)};
+    return {op, ...amt, names: splitNames(head)};
+  }
+  const roundK = (v) => Math.max(1000, Math.round(v / 1000) * 1000);
+  const applyBudget = (old, p) => p.op === 'set' ? p.val : p.pct != null ? roundK(old * (1 + (p.op === 'inc' ? 1 : -1) * p.pct / 100)) : roundK(old + (p.op === 'inc' ? 1 : -1) * p.val);
+  const budgetWords = (p) => p.op === 'set' ? `đặt ${vnd(p.val)}/ngày` : `${p.op === 'inc' ? 'tăng' : 'giảm'} ${p.pct != null ? p.pct + '%' : vnd(p.val)}`;
+
   function parseCommand(text) {
     const plan = [], misses = [];
     const here = (acc?.campaigns || []).map((c, i) => ({c, i, a: acc})).filter((x) => isVis(x.i) && x.c.id);
     const everywhere = (INDEX?.accounts || []).flatMap((a) => (a.campaigns || []).map((c, i) => ({c, i: a.id === acc?.id ? i : `${a.id}:${i}`, a}))).filter((x) => x.c.id);
     const VERB = /^(tam dung|tat|dung|pause|off|bat|mo|chay|resume|on|active)\b[\s:：\-–]*(cac\s+|cam\s+|camp\s+|campaign\s+)*[\s:：\-–]*/;
     let to = null;
+    const add = (h, extra) => { const k = h.c.id + ':' + extra.kind; if (!plan.some((p) => p.key === k)) plan.push({key: k, i: h.i, c: h.c, a: h.a, ...extra}); };
     for (const clause of text.split(/[;\n]+|\s+rồi\s+/i).map((x) => x.trim()).filter(Boolean)) {
       const n = norm(clause);
+      if (/ngan sach|budget/.test(n)) {
+        const b = parseBudget(clause);
+        if (b.err) { misses.push(b.err); continue; }
+        if (!b.names.length) { misses.push(`Thiếu tên camp trong lệnh “${clause}”.`); continue; }
+        for (const t of b.names) {
+          const hits = findCamps(t, null, here, everywhere);
+          if (!hits.length) { misses.push(`Không tìm thấy camp nào có tên chứa “${t}”.`); continue; }
+          for (const h of hits) add(h, {kind: 'budget', op: b.op, val: b.val, pct: b.pct});
+        }
+        to = null; continue;
+      }
       const m = n.match(VERB);
       let rest = clause;
       if (m) { to = /^(tam dung|tat|dung|pause|off)/.test(m[1]) ? 'PAUSED' : 'ACTIVE'; rest = clause.slice(m[0].length); }
-      else if (!to) { misses.push(`Không hiểu lệnh: “${clause}” (bắt đầu bằng “tắt” hoặc “bật”).`); continue; }
-      const terms = rest.split(/\s*,\s*|\s+và\s+|\s+va\s+/i).map((x) => x.trim().replace(/^[\s"“”'•\-–*:]+|[\s"“”'.:]+$/g, '')).filter((x) => norm(x).length >= 2);
+      else if (!to) { misses.push(`Không hiểu lệnh: “${clause}” (bắt đầu bằng “tắt”, “bật”, hoặc có chữ “ngân sách”).`); continue; }
+      const terms = splitNames(rest);
       if (!terms.length) continue; // dòng “Tắt:” – tên camp ở các dòng sau
       for (const t of terms) {
-        const nt = norm(t);
-        let hits;
-        if (/^(tat ca|het|all)\b/.test(nt)) {
-          const extra = nt.replace(/^(tat ca|het|all)\s*(cac\s+)?(cam|camp|campaign)?\s*/, '');
-          hits = here.filter((x) => (to === 'PAUSED' ? isRunning(x.c) : !isRunning(x.c)) && (!extra || /^dang (chay|bat)$/.test(extra) || norm(x.c.campaign).includes(extra.replace(/^co (chu|ten)\s+/, ''))));
-        } else {
-          hits = here.filter((x) => norm(x.c.campaign).includes(nt));
-          if (!hits.length) hits = everywhere.filter((x) => norm(x.c.campaign).includes(nt));
-        }
+        const hits = findCamps(t, to, here, everywhere);
         if (!hits.length) { misses.push(`Không tìm thấy camp nào có tên chứa “${t}”.`); continue; }
-        for (const h of hits) if (!plan.some((p) => p.c.id === h.c.id)) plan.push({i: h.i, c: h.c, a: h.a, to, term: t});
+        for (const h of hits) add(h, {kind: 'status', to});
       }
     }
     if (!plan.length && !misses.length && to) misses.push('Thiếu tên camp sau “tắt”/“bật”.');
     return {plan, misses};
   }
+
+  async function gapi(path, token, params, method = 'GET') {
+    const url = `https://graph.facebook.com/${META_V()}/${path}`;
+    const q = new URLSearchParams({...params, access_token: token});
+    const r = await (method === 'GET' ? fetch(`${url}?${q}`) : fetch(url, {method, body: q})).then((x) => x.json());
+    if (r.error) throw new Error(r.error.error_user_msg || r.error.message);
+    return r;
+  }
+  async function doBudget(p, token) {
+    const c = await gapi(p.c.id, token, {fields: 'daily_budget,lifetime_budget,adsets.limit(100){id,name,daily_budget,lifetime_budget,effective_status}'});
+    if (c.daily_budget) {
+      const old = Number(c.daily_budget), nv = applyBudget(old, p);
+      await gapi(p.c.id, token, {daily_budget: String(nv)}, 'POST');
+      p.c.daily_budget = nv;
+      return `ngân sách camp ${vnd(old)} → ${vnd(nv)}/ngày`;
+    }
+    if (c.lifetime_budget) throw new Error('camp dùng ngân sách trọn đời – web chưa hỗ trợ đổi loại này, hãy đổi trên Ads Manager.');
+    let sets = (c.adsets?.data || []).filter((s) => s.daily_budget && s.effective_status === 'ACTIVE');
+    if (!sets.length) sets = (c.adsets?.data || []).filter((s) => s.daily_budget);
+    if (!sets.length) throw new Error('không tìm thấy ngân sách hằng ngày ở camp hay nhóm quảng cáo.');
+    const sum = sets.reduce((t, s) => t + Number(s.daily_budget), 0);
+    const parts = [];
+    for (const s of sets) {
+      const old = Number(s.daily_budget);
+      const nv = p.op === 'set' ? roundK(p.val * old / sum) : applyBudget(old, p);
+      await gapi(s.id, token, {daily_budget: String(nv)}, 'POST');
+      parts.push(`“${s.name}” ${vnd(old)} → ${vnd(nv)}`);
+    }
+    p.c.daily_budget = sets.length ? null : p.c.daily_budget;
+    return `ngân sách ${sets.length} nhóm quảng cáo: ${parts.join('; ')}`;
+  }
+
   function renderPlan({plan, misses}) {
     const box = $('cmdPlan'); box.replaceChildren();
     for (const m of misses) box.append(el('p', {className: 'msg err', textContent: m}));
     if (!plan.length) return;
     const wrap = el('div', {className: 'plan'});
     for (const p of plan) {
-      const cb = el('input', {type: 'checkbox', checked: !(p.to === 'PAUSED' ? !isRunning(p.c) : isRunning(p.c))}); cb.dataset.i = p.i;
-      wrap.append(el('label', {}, cb, el('span', {className: 'chip ' + (p.to === 'PAUSED' ? 'bad' : 'good'), textContent: p.to === 'PAUSED' ? 'Tắt' : 'Bật'}), el('span', {className: 'nm', textContent: p.c.campaign}),
-        el('span', {className: 'small muted', textContent: `${p.a && p.a.id !== acc.id ? p.a.name + ' · ' : ''}hiện: ${p.c.status || '—'}`})));
+      const isB = p.kind === 'budget';
+      const cb = el('input', {type: 'checkbox', checked: isB ? true : !(p.to === 'PAUSED' ? !isRunning(p.c) : isRunning(p.c))}); cb.dataset.k = p.key;
+      const chip = isB ? el('span', {className: 'chip lil', textContent: 'Ngân sách'}) : el('span', {className: 'chip ' + (p.to === 'PAUSED' ? 'bad' : 'good'), textContent: p.to === 'PAUSED' ? 'Tắt' : 'Bật'});
+      const cur = isB ? (p.c.daily_budget ? `${vnd(p.c.daily_budget)} → ${vnd(applyBudget(Number(p.c.daily_budget), p))}/ngày` : budgetWords(p)) : `hiện: ${p.c.status || '—'}`;
+      wrap.append(el('label', {}, cb, chip, el('span', {className: 'nm', textContent: p.c.campaign}),
+        el('span', {className: 'small muted', textContent: `${p.a && p.a.id !== acc.id ? p.a.name + ' · ' : ''}${cur}`})));
     }
     const go = el('button', {className: 'btn-main', type: 'button', textContent: `Xác nhận thực hiện`});
     const cancel = el('button', {className: 'btn-soft', type: 'button', textContent: 'Huỷ'});
     const out = el('div', {className: 'plan'});
-    box.append(el('p', {className: 'small muted', style: 'margin:12px 0 0', textContent: `Xem lại ${plan.length} camp sẽ thay đổi. Bỏ tick camp không muốn đổi.`}), wrap, el('div', {className: 'row', style: 'margin-top:10px'}, go, cancel), out);
+    const nB = plan.filter((p) => p.kind === 'budget').length;
+    box.append(el('p', {className: 'small muted', style: 'margin:12px 0 0', textContent: `Xem lại ${plan.length} thay đổi. Bỏ tick dòng không muốn đổi.${nB ? ' Ngân sách hiển thị theo lần cập nhật gần nhất; số chính xác lấy trực tiếp từ Meta khi xác nhận.' : ''}`}), wrap, el('div', {className: 'row', style: 'margin-top:10px'}, go, cancel), out);
     cancel.addEventListener('click', () => box.replaceChildren());
     go.addEventListener('click', async () => {
       const token = (await fbToken(true)) || wtok.get();
       if (!token) { out.replaceChildren(el('p', {className: 'msg err', textContent: 'Chưa đăng nhập Facebook. Bấm “Đăng nhập Facebook” ở trên rồi thử lại.'})); return; }
       go.disabled = true; cancel.disabled = true;
-      const chosen = plan.filter((p) => wrap.querySelector(`input[data-i="${CSS.escape(String(p.i))}"]`).checked);
+      const chosen = plan.filter((p) => wrap.querySelector(`input[data-k="${CSS.escape(p.key)}"]`).checked);
       out.replaceChildren();
       for (const p of chosen) {
-        const line = el('p', {className: 'msg', textContent: `${p.to === 'PAUSED' ? 'Đang tắt' : 'Đang bật'} “${p.c.campaign}”…`}); out.append(line);
+        const verb = p.kind === 'budget' ? 'đổi ngân sách' : p.to === 'PAUSED' ? 'tắt' : 'bật';
+        const line = el('p', {className: 'msg', textContent: `Đang ${verb} “${p.c.campaign}”…`}); out.append(line);
         try {
-          const body = new URLSearchParams({status: p.to, access_token: token});
-          const r = await fetch(`https://graph.facebook.com/${META_V()}/${p.c.id}`, {method: 'POST', body}).then((x) => x.json());
-          if (r.error) throw new Error(r.error.error_user_msg || r.error.message);
-          p.c.status = p.to === 'PAUSED' ? 'Đang tắt' : 'Đang chạy';
-          if (typeof p.i === 'number' && campTot[p.i]) campTot[p.i].status = p.c.status;
-          line.className = 'msg res-ok'; line.textContent = `✓ Đã ${p.to === 'PAUSED' ? 'tắt' : 'bật'} “${p.c.campaign}”.`;
-        } catch (e) { line.className = 'msg res-err'; line.textContent = `✗ Không ${p.to === 'PAUSED' ? 'tắt' : 'bật'} được “${p.c.campaign}”: ${e.message}`; }
+          let msg;
+          if (p.kind === 'budget') msg = await doBudget(p, token);
+          else {
+            await gapi(p.c.id, token, {status: p.to}, 'POST');
+            p.c.status = p.to === 'PAUSED' ? 'Đang tắt' : 'Đang chạy';
+            if (typeof p.i === 'number' && campTot[p.i]) campTot[p.i].status = p.c.status;
+            msg = p.to === 'PAUSED' ? 'đã tắt' : 'đã bật';
+          }
+          line.className = 'msg res-ok'; line.textContent = `✓ “${p.c.campaign}”: ${msg}.`;
+        } catch (e) { line.className = 'msg res-err'; line.textContent = `✗ Không ${verb} được “${p.c.campaign}”: ${e.message}`; }
       }
-      out.append(el('p', {className: 'small muted', textContent: 'Lưu ý: bật camp chỉ có hiệu lực nếu nhóm quảng cáo và quảng cáo bên trong cũng đang bật. Trạng thái trên web sẽ được xác nhận ở lần tự cập nhật tiếp theo.'}));
+      out.append(el('p', {className: 'small muted', textContent: 'Lưu ý: bật camp chỉ có hiệu lực nếu nhóm quảng cáo và quảng cáo bên trong cũng đang bật. Web xác nhận lại trạng thái ở lần tự cập nhật tiếp theo.'}));
       renderCamps();
     });
   }
