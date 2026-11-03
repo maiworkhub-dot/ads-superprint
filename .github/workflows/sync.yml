@@ -3,7 +3,7 @@ name: Đồng bộ Meta Ads
 on:
   schedule:
     # 2 tiếng một lần từ 07:00 đến 23:00 giờ Việt Nam (giờ UTC trừ 7)
-    - cron: '5 0-16/2 * * *'
+    - cron: '5 0-16 * * *'
   workflow_dispatch:
     inputs:
       backfill_from:
