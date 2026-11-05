@@ -327,10 +327,12 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
           <div class="range" role="group" aria-label="Khoảng thời gian">
             <button class="btn-soft rp" data-r="camps" title="Từ ngày chạy sớm nhất của các camp đang chọn đến hôm nay">Từ khi camp chạy</button>
             <button class="btn-soft rp" data-r="1">Hôm nay</button>
+            <button class="btn-soft rp" data-r="yday">Hôm qua</button>
+            <button class="btn-soft rp" data-r="week" title="Thứ 2 – Chủ nhật tuần này">Tuần này</button>
+            <button class="btn-soft rp" data-r="lweek" title="Thứ 2 – Chủ nhật tuần trước">Tuần trước</button>
             <button class="btn-soft rp" data-r="7">7 ngày</button>
             <button class="btn-soft rp" data-r="30">30 ngày</button>
             <button class="btn-soft rp" data-r="month">Tháng này</button>
-            <button class="btn-soft rp" data-r="90">90 ngày</button>
             <button class="btn-soft rp" data-r="all">Toàn bộ</button>
             <span class="muted small">từ</span><input type="date" id="rFrom" aria-label="Từ ngày">
             <span class="muted small">đến</span><input type="date" id="rTo" aria-label="Đến ngày">
@@ -708,6 +710,11 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
       range = {from: firsts[0] || firstDate(), to, preset};
     }
     else if (preset === 'month') range = {from: to.slice(0, 8) + '01', to, preset};
+    else if (preset === 'yday') { const y = addDays(to, -1); range = {from: y, to: y, preset}; }
+    else if (preset === 'week' || preset === 'lweek') {
+      const mon = addDays(to, -((D(to).getUTCDay() + 6) % 7));
+      range = preset === 'week' ? {from: mon, to, preset} : {from: addDays(mon, -7), to: addDays(mon, -1), preset};
+    }
     else if (preset === 'year') range = {from: to.slice(0, 4) + '-01-01', to, preset};
     else if (preset === 'custom') {}
     else range = {from: addDays(to, -(+preset - 1)), to, preset};
