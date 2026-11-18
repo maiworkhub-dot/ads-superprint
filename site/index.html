@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
-<title>Ads Superprint</title>
+<title>Evelyn Ads Studio</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%228%22 fill=%22%23d9739d%22/%3E%3Cpath d=%22M8 22V14M14 22V9M20 22V16M26 22V12%22 stroke=%22white%22 stroke-width=%223%22 stroke-linecap=%22round%22/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600&family=Playfair+Display:ital,wght@0,500;1,500&display=swap">
@@ -237,9 +237,9 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
 <div class="lock" id="lock" hidden>
   <form class="lock-card" id="lockForm" autocomplete="on">
     <div class="mark" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 32 32"><path d="M8 22V14M14 22V9M20 22V16M26 22V12" stroke="var(--rose)" stroke-width="3" stroke-linecap="round" fill="none"/></svg></div>
-    <h1 style="font-size:1.5rem">Báo cáo quảng cáo <em>Meta</em></h1>
-    <p class="muted small" style="margin:0">Nhập mật khẩu để xem số liệu.</p>
-    <input type="text" name="username" value="superprint-ads" autocomplete="username" hidden>
+    <h1 style="font-size:1.5rem">Evelyn <em>Ads Studio</em></h1>
+    <p class="muted small" style="margin:0">Báo cáo quảng cáo Meta · Nhập mật khẩu để xem số liệu.</p>
+    <input type="text" name="username" value="evelyn-ads-studio" autocomplete="username" hidden>
     <input type="password" id="pw" autocomplete="current-password" placeholder="Mật khẩu" aria-label="Mật khẩu" required>
     <button class="btn-main" type="submit" id="pwBtn">Mở báo cáo</button>
     <p class="msg err" id="pwErr" aria-live="polite"></p>
@@ -249,7 +249,7 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
 <div class="wrap" id="app" hidden>
   <header class="top">
     <div>
-      <h1>Báo cáo quảng cáo <em>Meta</em></h1>
+      <h1>Evelyn <em>Ads Studio</em></h1>
       <p class="muted small" id="sync">Đang tải dữ liệu…</p>
       <p class="muted small" style="margin-top:2px"><span id="autoSync"></span> · <button class="linkbtn" id="logout" type="button">Đăng xuất</button></p>
     </div>
@@ -645,7 +645,7 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
     const đ = (v) => v == null || !isFinite(v) ? '—' : NF.format(Math.round(v)) + 'đ';
     const [yy, mm, dd] = date.split('-');
     const lines = [];
-    lines.push(`📊 BÁO CÁO ADS ${dd}/${mm} | SUPERPRINT${partial ? ` (tạm tính đến ${acc.synced_time || 'hiện tại'})` : ''}`, '');
+    lines.push(`📊 BÁO CÁO ADS ${dd}/${mm} | ${String(/^\d+$/.test(acc.name || '') && acc.bm_name && acc.bm_name !== 'Không thuộc BM' ? acc.bm_name : (acc.name || acc.id)).toUpperCase()}${partial ? ` (tạm tính đến ${acc.synced_time || 'hiện tại'})` : ''}`, '');
     lines.push(`💰 Chi phí: ${đ(t.spend)}`, '');
     const resRows = rows.filter((x) => x.counts).sort((x, y) => y.res - x.res || (x.res ? x.spend / x.res : 1e15) - (y.res ? y.spend / y.res : 1e15));
     lines.push(`🎯 Kết quả: ${num(t.res)} ${resWord}${t.cpr ? ` – CPL ${đ(t.cpr)}` : ''}`);
