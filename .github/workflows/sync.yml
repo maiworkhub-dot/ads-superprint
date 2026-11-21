@@ -33,6 +33,8 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main   # luôn lấy bản mới nhất (lượt chạy trước có thể vừa ghi số liệu/khoá)
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -57,7 +59,7 @@ jobs:
           git add site/data
           if git diff --cached --quiet; then exit 0; fi
           git commit -m "Cập nhật số liệu $(TZ=Asia/Ho_Chi_Minh date +'%d/%m %H:%M')"
-          for i in 1 2 3; do git pull --rebase origin main && git push && exit 0; sleep 5; done
+          for i in 1 2 3; do git pull --rebase -X theirs origin main && git push && exit 0; sleep 5; done
           exit 1
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
