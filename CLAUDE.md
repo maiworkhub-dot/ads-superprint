@@ -25,8 +25,10 @@ site/data/                 Số liệu đã mã hoá (máy tự ghi)
   keyring.json (khoá chính) {keys: {act: khoá_riêng}, done, grants} – khoá riêng từng tài khoản
   acct/<act>.json (khoá TK) {synced_at, pages (của TK), account} – bản cho người xem
   days/<act>__<YYYY-MM>.json (khoá TK)  hàng [dd, chỉ_số_camp, spend, imp, reach, clicks, res, link_clicks, leads, msgs, engagement]
-  users/<uid>.json         hồ sơ người xem do chủ trang duyệt (web ghi qua GitHub API): u, name, salt, pub, priv, accounts
+  approvals/<uid>__<ms>.json  chủ trang tạo qua trang "new file" của GitHub (web điền sẵn): hồ sơ + accounts ([] = xoá)
+  users/<uid>.json         hồ sơ đăng nhập công khai (máy ghi từ approvals): u, name, salt, iter, pub, priv
   keys/<uid>.json          máy đồng bộ gói khoá các TK được xem cho người đó (ECDH P-256)
+  userlist.json (khoá chính) danh sách người xem cho tab Người xem
 scripts/sync.mjs           Lấy số liệu Meta Graph API (Node 22, không thư viện ngoài)
 scripts/crypto.mjs         AES-GCM, khoá PBKDF2-SHA256 200k vòng từ mật khẩu
 .github/workflows/sync.yml Lịch chạy + commit dữ liệu + deploy Pages
@@ -51,8 +53,9 @@ Loại kết quả: lead, message, reach, click, engagement, other — chỉ **l
 ## Người xem (chỉ xem Dashboard)
 - uid = sha256(tên đăng nhập viết thường)[:16]. Chủ trang đăng nhập với tên trống/`admin` + mật khẩu DATA_PASSWORD.
 - Người xem bấm Đăng ký → web tạo cặp khoá, khoá bí mật được khoá bằng mật khẩu của họ → ra mã `EAS1-…` gửi chủ trang.
-- Tab "Người xem" (chỉ chủ trang): dán mã, tick tài khoản → web ghi `site/data/users/<uid>.json` bằng mã GitHub
-  (fine-grained, Contents RW, lưu trong trình duyệt). Push đó chạy workflow với `USERS_ONLY=1` để tạo `keys/<uid>.json` rồi deploy.
+- Tab "Người xem" (chỉ chủ trang): dán mã, tick tài khoản → web mở `github.com/<repo>/new/main?filename=site/data/approvals/…&value=…`,
+  chủ trang bấm Commit. Không dùng GitHub API từ trình duyệt (máy chủ trang bị "Failed to fetch").
+  Push đó chạy workflow với `USERS_ONLY=1`: lấy bản approvals mới nhất mỗi người → users/, keys/, userlist.json, xoá approvals cũ.
 - Bỏ quyền/xoá người xem → máy đồng bộ đổi khoá tài khoản đó (mã cũ không mở được số liệu mới).
 - Người xem chỉ thấy tab Dashboard, không mở báo cáo ngày, không ra lệnh.
 

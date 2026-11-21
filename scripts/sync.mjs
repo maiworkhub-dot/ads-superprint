@@ -104,14 +104,22 @@ async function rotateAccount(id, { ring, acctKey, manifest }) {
   log(`Đã đổi khoá tài khoản ${id} vì có người bị thu hồi quyền.`);
 }
 
-async function syncUsers({ ring, acctKey, manifest }) {
-  const udir = path.join(DATA, 'users'), kdir = path.join(DATA, 'keys');
+async function syncUsers({ key, ring, acctKey, manifest }) {
+  // Chủ trang duyệt / sửa / xoá bằng cách tạo file site/data/approvals/<uid>__<thời_điểm>.json trên GitHub.
+  // Bản mới nhất của mỗi người là quyền hiện tại (accounts rỗng = xoá người xem).
+  const adir = path.join(DATA, 'approvals'), udir = path.join(DATA, 'users'), kdir = path.join(DATA, 'keys');
+  const latest = new Map(), latestFile = new Map(), files = new Map();
+  for (const f of await listJSON(adir)) {
+    const r = await readJSON(path.join(adir, f), null);
+    if (!r?.u || !r?.pub || !r?.priv?.ct || !r?.salt) { log(`Bỏ qua file duyệt không hợp lệ: ${f}`); continue; }
+    const uid = uidOf(r.u), at = r.at || r.approved_at || '';
+    files.set(uid, [...(files.get(uid) || []), f]);
+    if (!latest.has(uid) || at >= (latest.get(uid).at || latest.get(uid).approved_at || '')) { latest.set(uid, r); latestFile.set(uid, f); }
+  }
   const users = [];
-  for (const f of await listJSON(udir)) {
-    const r = await readJSON(path.join(udir, f), null), uid = f.slice(0, -5);
-    if (!r?.u || !r?.pub || uidOf(r.u) !== uid) { log(`Bỏ qua hồ sơ người dùng không hợp lệ: ${f}`); continue; }
+  for (const [uid, r] of latest) {
     const accounts = [...new Set((r.accounts || []).map(String))].filter((a) => ring.keys[a]).sort();
-    users.push({ uid, r, accounts });
+    if ((r.accounts || []).length) users.push({ uid, r, accounts });
   }
   const want = new Map(users.map((x) => [x.uid, x.accounts]));
   // thu hồi quyền => đổi khoá tài khoản đó để mã cũ không mở được số liệu mới
@@ -119,8 +127,12 @@ async function syncUsers({ ring, acctKey, manifest }) {
   for (const [uid, g] of Object.entries(ring.grants || {})) for (const a of g.accounts || []) if (!(want.get(uid) || []).includes(a) && ring.keys[a]) revoked.add(a);
   for (const a of revoked) await rotateAccount(a, { ring, acctKey, manifest });
   const grants = {};
-  if (users.length) await fs.mkdir(kdir, { recursive: true });
+  if (users.length) { await fs.mkdir(kdir, { recursive: true }); await fs.mkdir(udir, { recursive: true }); }
   for (const { uid, r, accounts } of users) {
+    // hồ sơ công khai để đăng nhập (khoá bí mật vẫn khoá bằng mật khẩu của người xem)
+    const prof = { u: r.u, name: r.name || r.u, salt: r.salt, iter: r.iter || ITER, pub: r.pub, priv: r.priv };
+    const up = path.join(udir, `${uid}.json`);
+    if (JSON.stringify(await readJSON(up, null)) !== JSON.stringify(prof)) await fs.writeFile(up, JSON.stringify(prof));
     const h = sha(r.pub + '|' + accounts.map((a) => a + ':' + sha(ring.keys[a])).join(','));
     const p = path.join(kdir, `${uid}.json`);
     const exists = await fs.access(p).then(() => true, () => false);
@@ -131,8 +143,13 @@ async function syncUsers({ ring, acctKey, manifest }) {
     }
     grants[uid] = { h, accounts };
   }
-  for (const f of await listJSON(kdir)) if (!want.has(f.slice(0, -5))) { await fs.rm(path.join(kdir, f)); log(`Đã xoá quyền ${f}.`); }
+  for (const dir of [kdir, udir]) for (const f of await listJSON(dir)) if (!want.has(f.slice(0, -5))) { await fs.rm(path.join(dir, f)); log(`Đã xoá quyền ${f}.`); }
+  // dọn file duyệt cũ, chỉ giữ bản mới nhất của người đang có quyền
+  for (const [uid, list] of files) for (const f of list) if (!want.has(uid) || f !== latestFile.get(uid)) await fs.rm(path.join(adir, f));
   ring.grants = grants;
+  // danh sách người xem cho chủ trang (mã hoá bằng khoá chính)
+  const list = users.map(({ uid, r, accounts }) => ({ uid, u: r.u, name: r.name || r.u, salt: r.salt, iter: r.iter || ITER, pub: r.pub, priv: r.priv, accounts: (r.accounts || []).map(String), at: r.at || r.approved_at, ready: accounts.length > 0 }));
+  await fs.writeFile(path.join(DATA, 'userlist.json'), JSON.stringify(await encryptJSON(key, { at: new Date().toISOString(), users: list })));
 }
 
 export async function run(env = process.env) {

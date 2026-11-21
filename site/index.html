@@ -487,21 +487,13 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
   <section id="v-users" class="view" hidden>
     <div style="display:grid;gap:20px">
       <div class="card">
-        <div class="card-head"><h2>Người xem</h2><span class="muted small" id="ghState"></span></div>
-        <p class="note">Người xem tự đăng ký ở màn hình đăng nhập (nút <b>Đăng ký</b>) rồi gửi bạn <b>mã đăng ký</b>. Bạn dán mã vào ô dưới, tick tài khoản quảng cáo được xem và bấm Duyệt. Người xem <b>chỉ thấy tab Dashboard</b> của các tài khoản được tick, không sửa hay bật/tắt được gì. Quyền có hiệu lực sau khoảng 1–2 phút.</p>
-        <div id="ghSetup" hidden>
-          <p class="note"><b>Kết nối GitHub (làm 1 lần trên máy này)</b> để web lưu được danh sách người xem:</p>
-          <ol class="steps">
-            <li>Mở <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">trang tạo mã GitHub</a> (đăng nhập tài khoản GitHub của bạn).</li>
-            <li>Token name: <b>Evelyn người xem</b> · Expiration: <b>No expiration</b> (hoặc 1 năm).</li>
-            <li>Repository access: <b>Only select repositories</b> → chọn <b>evelyn-ads-studio</b>.</li>
-            <li>Phần Permissions: bấm <b>+ Add permissions</b>, gõ <b>Contents</b> (chỉ gõ chữ này) → chọn <b>Contents</b>, rồi đổi quyền của nó từ Read-only thành <b>Read and write</b>.</li>
-            <li>Bấm <b>Generate token</b>, copy mã (bắt đầu bằng <b>github_pat_</b>) rồi dán vào ô dưới.</li>
-          </ol>
-          <div class="row" style="margin-top:10px"><input type="password" id="ghTok" placeholder="Dán mã GitHub (github_pat_…)" aria-label="Mã GitHub" autocomplete="off" style="flex:1;min-width:200px"><button class="btn-main" id="ghSave" type="button">Lưu mã</button></div>
-          <p class="msg" id="ghMsg" aria-live="polite"></p>
-        </div>
-        <p class="small" style="margin:8px 0 0"><button class="linkbtn" id="ghToggle" type="button">Đổi / xoá mã GitHub</button></p>
+        <div class="card-head"><h2>Người xem</h2></div>
+        <p class="note">Người xem tự đăng ký ở màn hình đăng nhập (nút <b>Đăng ký</b>) rồi gửi bạn <b>mã đăng ký</b>. Bạn dán mã vào ô dưới, tick tài khoản quảng cáo được xem và bấm <b>Duyệt</b>. Người xem <b>chỉ thấy tab Dashboard</b> của các tài khoản được tick, không sửa hay bật/tắt được gì.</p>
+        <ol class="steps">
+          <li>Bấm <b>Duyệt</b> (hoặc Lưu quyền / Xoá) → web mở một trang GitHub đã điền sẵn.</li>
+          <li>Trên trang GitHub, bấm nút xanh <b>Commit changes…</b>, rồi bấm <b>Commit changes</b> lần nữa trong hộp hiện ra. (Nếu GitHub hỏi đăng nhập thì đăng nhập tài khoản GitHub của bạn.)</li>
+          <li>Đợi 1–2 phút là xong. Không cần mã GitHub.</li>
+        </ol>
       </div>
 
       <div class="card">
@@ -513,14 +505,14 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
           <div class="ucard"><div class="uh"><span class="nm" id="reqName"></span><span class="muted small" id="reqU"></span></div>
             <div class="small muted">Tick tài khoản quảng cáo người này được xem:</div>
             <div class="acc-pick" id="reqAccs"></div>
-            <div class="row" style="margin-top:8px"><button class="btn-main" id="reqOk" type="button">Duyệt &amp; cấp quyền</button><button class="btn-soft" id="reqCancel" type="button">Huỷ</button></div>
+            <div class="row" style="margin-top:8px"><button class="btn-main" id="reqOk" type="button">Duyệt (mở GitHub)</button><button class="btn-soft" id="reqCancel" type="button">Huỷ</button></div>
           </div>
         </div>
       </div>
 
       <div class="card">
         <div class="card-head"><h3>Người xem đã duyệt</h3><button class="btn-soft" id="uReload" type="button">Tải lại</button></div>
-        <p class="note" style="margin-top:4px">Sửa tick rồi bấm <b>Lưu quyền</b>. Bấm <b>Xoá</b> để thu hồi toàn bộ quyền (người đó không mở được số liệu mới nữa).</p>
+        <p class="note" style="margin-top:4px">Sửa tick rồi bấm <b>Lưu quyền</b>. Bấm <b>Xoá</b> để thu hồi toàn bộ quyền (người đó không mở được số liệu mới nữa). Danh sách cập nhật sau khi web tự đồng bộ (1–2 phút sau khi bấm Commit trên GitHub).</p>
         <div class="ulist" id="uList"><div class="empty">Đang tải…</div></div>
       </div>
     </div>
@@ -1519,41 +1511,17 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
   setTimeout(refreshFB, 1500);
 
   // ---------------- quản lý người xem (chỉ chủ trang) ----------------
-  // Duyệt = ghi site/data/users/<uid>.json lên GitHub; máy đồng bộ tự gói khoá các tài khoản được tick cho người đó.
-  const GH_REPO = 'maiworkhub-dot/evelyn-ads-studio', GH_DIR = 'site/data/users';
-  const ghTok = { get() { try { return localStorage.getItem('ads.ghtoken') || ''; } catch { return ''; } }, set(v) { try { v ? localStorage.setItem('ads.ghtoken', v) : localStorage.removeItem('ads.ghtoken'); } catch {} } };
-  async function gh(path, opt = {}) {
-    let r;
-    try {
-      r = await fetch(`https://api.github.com/repos/${GH_REPO}/${path}`, {method: opt.method || 'GET', body: opt.body,
-        headers: {Accept: 'application/vnd.github+json', Authorization: `token ${ghTok.get()}`}});
-    } catch { throw new Error('trình duyệt không kết nối được GitHub. Tắt trình chặn quảng cáo/VPN cho trang này, hoặc thử bằng Chrome/Safari khác rồi bấm lại.'); }
-    if (r.status === 404 && opt.allow404) return null;
-    const j = await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error(r.status === 401 ? 'mã GitHub sai hoặc hết hạn' : r.status === 403 ? 'mã GitHub chưa có quyền ghi (Contents: Read and write)' : (j.message || `GitHub lỗi ${r.status}`));
-    return j;
+  // Duyệt / sửa / xoá = tạo 1 file site/data/approvals/<uid>__<thời_điểm>.json bằng trang "tạo file" của GitHub
+  // (đã điền sẵn nội dung, chủ trang chỉ bấm Commit). Máy đồng bộ đọc file đó và cấp quyền.
+  const GH_REPO = 'maiworkhub-dot/evelyn-ads-studio';
+  function openApproval(uid, rec) {
+    const at = new Date().toISOString(), body = {...rec, at};
+    const name = `site/data/approvals/${uid}__${Date.parse(at)}.json`;
+    const url = `https://github.com/${GH_REPO}/new/main?filename=${encodeURIComponent(name)}&value=${encodeURIComponent(JSON.stringify(body, null, 1) + '\n')}`;
+    const w = window.open(url, '_blank');
+    if (w) w.opener = null; else location.href = url; // trình duyệt chặn cửa sổ mới thì mở ngay trong tab này
   }
-  const utf8b64 = (t) => b64(new TextEncoder().encode(t));
-  const b64utf8 = (t) => new TextDecoder().decode(unb64(t.replace(/\s/g, '')));
-  let ghEdit = false, usersCache = null; const pendingSave = new Set();
-  function ghUI() {
-    const has = !!ghTok.get();
-    $('ghSetup').hidden = has && !ghEdit;
-    $('ghToggle').hidden = !has;
-    $('ghState').textContent = has ? '✓ Đã kết nối GitHub' : 'Chưa kết nối GitHub';
-  }
-  $('ghToggle').addEventListener('click', () => { ghEdit = !ghEdit; ghUI(); });
-  $('ghSave').addEventListener('click', async () => {
-    const v = $('ghTok').value.replace(/[^\x21-\x7e]/g, ''), m = $('ghMsg'); // bỏ dấu cách/ký tự ẩn khi copy
-    if (!v) { ghTok.set(''); ghEdit = false; usersCache = null; m.textContent = ''; renderUsers(); return; }
-    m.className = 'msg'; m.textContent = 'Đang kiểm tra mã…';
-    const old = ghTok.get(); ghTok.set(v);
-    try {
-      const r = await gh('');
-      if (!r.permissions?.push) throw new Error('mã chưa có quyền ghi vào kho evelyn-ads-studio');
-      $('ghTok').value = ''; m.className = 'msg ok'; m.textContent = 'Đã kết nối GitHub trên máy này.'; ghEdit = false; usersCache = null; renderUsers(true);
-    } catch (e) { ghTok.set(old); m.className = 'msg err'; m.textContent = 'Không dùng được mã: ' + e.message; }
-  });
+  const profileOf = (r) => ({v: 1, u: r.u, name: r.name, salt: r.salt, iter: r.iter, pub: r.pub, priv: r.priv});
 
   // ô tick tài khoản quảng cáo, nhóm theo BM
   function accPicker(box, chosen) {
@@ -1565,14 +1533,10 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
     }
     return () => [...box.querySelectorAll('input:checked')].map((x) => String(x.dataset.id));
   }
-  async function putUser(uid, rec, sha, msg) {
-    await gh(`contents/${GH_DIR}/${uid}.json`, {method: 'PUT', body: JSON.stringify({message: msg, branch: 'main', content: utf8b64(JSON.stringify(rec, null, 1) + '\n'), ...(sha ? {sha} : {})})});
-    pendingSave.add(uid);
-  }
 
   // duyệt người mới
   let reqData = null, reqGet = null;
-  $('reqIn').addEventListener('input', async () => {
+  $('reqIn').addEventListener('input', () => {
     const t = $('reqIn').value.trim(), m = $('reqMsg'); reqData = null; $('reqBox').hidden = true; m.textContent = '';
     if (!t) return;
     try {
@@ -1587,66 +1551,45 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
   $('reqCancel').addEventListener('click', () => { $('reqIn').value = ''; reqData = null; $('reqBox').hidden = true; });
   $('reqOk').addEventListener('click', async () => {
     const m = $('reqMsg');
-    if (!ghTok.get()) { m.className = 'msg err'; m.textContent = 'Hãy kết nối GitHub ở khung trên trước.'; return; }
     const ids = reqGet(); if (!ids.length) { m.className = 'msg err'; m.textContent = 'Hãy tick ít nhất 1 tài khoản quảng cáo.'; return; }
-    $('reqOk').disabled = true; m.className = 'msg'; m.textContent = 'Đang lưu…';
-    try {
-      const uid = await uidOf(reqData.u);
-      const ex = await gh(`contents/${GH_DIR}/${uid}.json?ref=main`, {allow404: true});
-      if (ex && JSON.parse(b64utf8(ex.content)).pub !== reqData.pub && !confirm(`Tên đăng nhập “${reqData.u}” đã có người dùng. Thay bằng người đăng ký mới này?`)) { m.textContent = ''; return; }
-      const rec = {...reqData, role: 'viewer', accounts: ids, approved_at: new Date().toISOString()};
-      await putUser(uid, rec, ex?.sha, `Duyệt người xem ${reqData.u}`);
-      m.className = 'msg ok'; m.textContent = `Đã duyệt ${reqData.name || reqData.u}. Khoảng 1–2 phút nữa người đó đăng nhập được.`;
-      $('reqIn').value = ''; $('reqBox').hidden = true; reqData = null; usersCache = null; renderUsers(true);
-    } catch (e) { m.className = 'msg err'; m.textContent = 'Không lưu được: ' + e.message; }
-    finally { $('reqOk').disabled = false; }
+    const uid = await uidOf(reqData.u);
+    const ex = (usersCache || []).find((x) => x.uid === uid);
+    if (ex && ex.pub !== reqData.pub && !confirm(`Tên đăng nhập “${reqData.u}” đã có người dùng. Thay bằng người đăng ký mới này?`)) return;
+    openApproval(uid, {...profileOf(reqData), accounts: ids});
+    m.className = 'msg ok'; m.textContent = `Đã mở GitHub. Bấm “Commit changes” ở trang đó để duyệt ${reqData.name || reqData.u}; 1–2 phút sau người đó đăng nhập được.`;
+    $('reqIn').value = ''; $('reqBox').hidden = true; reqData = null;
   });
 
-  async function renderUsers(force) {
-    ghUI();
+  let usersCache = null;
+  async function renderUsers() {
     const box = $('uList');
-    if (!ghTok.get()) { box.replaceChildren(el('div', {className: 'empty', textContent: 'Kết nối GitHub ở khung trên để xem và duyệt người xem.'})); return; }
-    if (usersCache && !force) return drawUsers();
     box.replaceChildren(el('div', {className: 'empty', textContent: 'Đang tải…'}));
-    try {
-      const files = ((await gh(`contents/${GH_DIR}?ref=main`, {allow404: true})) || []).filter((f) => f.name.endsWith('.json'));
-      const keys = new Set(((await gh('contents/site/data/keys?ref=main', {allow404: true})) || []).map((f) => f.name));
-      usersCache = [];
-      for (const f of files) {
-        const j = await gh(`contents/${GH_DIR}/${f.name}?ref=main`);
-        usersCache.push({uid: f.name.slice(0, -5), sha: j.sha, rec: JSON.parse(b64utf8(j.content)), ready: keys.has(f.name)});
-      }
-      drawUsers();
-    } catch (e) { box.replaceChildren(el('p', {className: 'msg err', textContent: 'Không tải được danh sách: ' + e.message})); }
-  }
-  function drawUsers() {
-    const box = $('uList'); box.replaceChildren();
+    try { usersCache = (await decrypt(KEY, await getJSON('data/userlist.json'))).users || []; }
+    catch { usersCache = []; }
+    box.replaceChildren();
     if (!usersCache.length) { box.append(el('div', {className: 'empty', textContent: 'Chưa có người xem nào.'})); return; }
-    for (const x of usersCache.sort((p, q) => (p.rec.name || p.rec.u).localeCompare(q.rec.name || q.rec.u, 'vi'))) {
-      const picks = el('div', {className: 'acc-pick'}), get = accPicker(picks, new Set((x.rec.accounts || []).map(String)));
+    for (const x of usersCache.sort((p, q) => (p.name || p.u).localeCompare(q.name || q.u, 'vi'))) {
+      const picks = el('div', {className: 'acc-pick'}), get = accPicker(picks, new Set((x.accounts || []).map(String)));
       const msg = el('p', {className: 'msg'});
-      const save = el('button', {className: 'btn-main', type: 'button', textContent: 'Lưu quyền'});
+      const save = el('button', {className: 'btn-main', type: 'button', textContent: 'Lưu quyền (mở GitHub)'});
       const del = el('button', {className: 'btn-soft', type: 'button', textContent: 'Xoá người xem'});
-      const st = pendingSave.has(x.uid) ? el('span', {className: 'chip warn', textContent: 'Đang cập nhật quyền (1–2 phút)'}) : x.ready ? el('span', {className: 'chip good', textContent: 'Đã cấp quyền'}) : el('span', {className: 'chip warn', textContent: 'Đang cấp quyền'});
-      save.addEventListener('click', async () => {
+      save.addEventListener('click', () => {
         const ids = get(); if (!ids.length) { msg.className = 'msg err'; msg.textContent = 'Tick ít nhất 1 tài khoản, hoặc bấm Xoá người xem.'; return; }
-        save.disabled = true; msg.className = 'msg'; msg.textContent = 'Đang lưu…';
-        try { await putUser(x.uid, {...x.rec, accounts: ids, updated_at: new Date().toISOString()}, x.sha, `Sửa quyền người xem ${x.rec.u}`); usersCache = null; renderUsers(true); }
-        catch (e) { msg.className = 'msg err'; msg.textContent = 'Không lưu được: ' + e.message; save.disabled = false; }
+        openApproval(x.uid, {...profileOf(x), accounts: ids});
+        msg.className = 'msg ok'; msg.textContent = 'Đã mở GitHub. Bấm “Commit changes” để lưu; 1–2 phút sau có hiệu lực.';
       });
-      del.addEventListener('click', async () => {
-        if (!confirm(`Xoá người xem “${x.rec.name || x.rec.u}”? Người này sẽ không xem được số liệu nữa.`)) return;
-        del.disabled = true; msg.className = 'msg'; msg.textContent = 'Đang xoá…';
-        try { await gh(`contents/${GH_DIR}/${x.uid}.json`, {method: 'DELETE', body: JSON.stringify({message: `Xoá người xem ${x.rec.u}`, sha: x.sha, branch: 'main'})}); usersCache = null; renderUsers(true); }
-        catch (e) { msg.className = 'msg err'; msg.textContent = 'Không xoá được: ' + e.message; del.disabled = false; }
+      del.addEventListener('click', () => {
+        if (!confirm(`Xoá người xem “${x.name || x.u}”? Người này sẽ không xem được số liệu nữa.`)) return;
+        openApproval(x.uid, {...profileOf(x), accounts: []});
+        msg.className = 'msg ok'; msg.textContent = 'Đã mở GitHub. Bấm “Commit changes” để xoá; 1–2 phút sau có hiệu lực.';
       });
       box.append(el('div', {className: 'ucard'},
-        el('div', {className: 'uh'}, el('span', {}, el('span', {className: 'nm', textContent: x.rec.name || x.rec.u}), el('span', {className: 'muted small', textContent: `  ·  ${x.rec.u}`})), st),
-        el('div', {className: 'small muted', textContent: `Duyệt ${x.rec.approved_at ? new Date(x.rec.approved_at).toLocaleDateString('vi-VN') : '—'} · được xem ${(x.rec.accounts || []).length} tài khoản · chỉ xem Dashboard`}),
+        el('div', {className: 'uh'}, el('span', {}, el('span', {className: 'nm', textContent: x.name || x.u}), el('span', {className: 'muted small', textContent: `  ·  ${x.u}`})), el('span', {className: 'chip good', textContent: 'Đã cấp quyền'})),
+        el('div', {className: 'small muted', textContent: `Cập nhật ${x.at ? new Date(x.at).toLocaleDateString('vi-VN') : '—'} · được xem ${(x.accounts || []).length} tài khoản · chỉ xem Dashboard`}),
         picks, el('div', {className: 'row', style: 'margin-top:6px'}, save, del), msg));
     }
   }
-  $('uReload').addEventListener('click', () => renderUsers(true));
+  $('uReload').addEventListener('click', () => renderUsers());
 
   // ---------------- data (encrypted static files) ----------------
   const b64 = (u8) => btoa(String.fromCharCode(...u8));

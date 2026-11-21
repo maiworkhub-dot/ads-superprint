@@ -12,11 +12,11 @@ on:
         default: ''
   push:
     branches: [main]
-    # sửa code => deploy lại; chủ trang duyệt/sửa người xem (site/data/users) => cấp quyền rồi deploy
+    # sửa code => deploy lại; chủ trang duyệt/sửa người xem (site/data/approvals) => cấp quyền rồi deploy
     paths:
       - '**'
       - '!site/data/**'
-      - 'site/data/users/**'
+      - 'site/data/approvals/**'
 
 permissions:
   contents: write
