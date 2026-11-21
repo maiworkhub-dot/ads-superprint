@@ -19,10 +19,14 @@ GitHub Actions lấy số liệu từ Meta mỗi giờ, GitHub Pages đưa web l
 ```
 site/index.html            Toàn bộ giao diện (1 file: HTML + CSS + JS, không build)
 site/data/                 Số liệu đã mã hoá (máy tự ghi)
-  meta.json                {salt, iter, check} – dùng kiểm tra mật khẩu
+  meta.json                {salt, iter, check} – dùng kiểm tra mật khẩu chủ trang
   manifest.json            {files: {đường_dẫn: sha16}}
-  index.json (mã hoá)      {synced_at, token_expires, api_version, pages, accounts[...]}
-  days/<act>__<YYYY-MM>.json (mã hoá)  hàng [dd, chỉ_số_camp, spend, imp, reach, clicks, res]
+  index.json (khoá chính)  {synced_at, token_expires, api_version, pages, accounts[...]}
+  keyring.json (khoá chính) {keys: {act: khoá_riêng}, done, grants} – khoá riêng từng tài khoản
+  acct/<act>.json (khoá TK) {synced_at, pages (của TK), account} – bản cho người xem
+  days/<act>__<YYYY-MM>.json (khoá TK)  hàng [dd, chỉ_số_camp, spend, imp, reach, clicks, res, link_clicks, leads, msgs, engagement]
+  users/<uid>.json         hồ sơ người xem do chủ trang duyệt (web ghi qua GitHub API): u, name, salt, pub, priv, accounts
+  keys/<uid>.json          máy đồng bộ gói khoá các TK được xem cho người đó (ECDH P-256)
 scripts/sync.mjs           Lấy số liệu Meta Graph API (Node 22, không thư viện ngoài)
 scripts/crypto.mjs         AES-GCM, khoá PBKDF2-SHA256 200k vòng từ mật khẩu
 .github/workflows/sync.yml Lịch chạy + commit dữ liệu + deploy Pages
@@ -44,13 +48,21 @@ Loại kết quả: lead, message, reach, click, engagement, other — chỉ **l
 - Lỗi 190 = mã Meta hết hạn/bị huỷ → tạo mã mới ở Graph API Explorer (app "Ads Superprint",
   id 1915751329586412) → Extend → dán vào secret META_TOKEN.
 
+## Người xem (chỉ xem Dashboard)
+- uid = sha256(tên đăng nhập viết thường)[:16]. Chủ trang đăng nhập với tên trống/`admin` + mật khẩu DATA_PASSWORD.
+- Người xem bấm Đăng ký → web tạo cặp khoá, khoá bí mật được khoá bằng mật khẩu của họ → ra mã `EAS1-…` gửi chủ trang.
+- Tab "Người xem" (chỉ chủ trang): dán mã, tick tài khoản → web ghi `site/data/users/<uid>.json` bằng mã GitHub
+  (fine-grained, Contents RW, lưu trong trình duyệt). Push đó chạy workflow với `USERS_ONLY=1` để tạo `keys/<uid>.json` rồi deploy.
+- Bỏ quyền/xoá người xem → máy đồng bộ đổi khoá tài khoản đó (mã cũ không mở được số liệu mới).
+- Người xem chỉ thấy tab Dashboard, không mở báo cáo ngày, không ra lệnh.
+
 ## Giao diện (site/index.html)
-Màn khoá mật khẩu → chọn BM → tài khoản → fanpage. 3 tab:
+Màn đăng nhập (chủ trang / người xem / đăng ký) → chọn BM → tài khoản → fanpage. 4 tab:
 1. **Báo cáo ngày**: ô tổng, bảng từng camp (Chi tiêu, KQ, CPL, CTR, CPM, CPC, Hiển thị), Hiệu quả / Chưa
    hiệu quả kèm nguyên nhân (`diagnose()`: so CPM, CTR, tỷ lệ click→KQ với TB 30 ngày), tin nhắn gửi sếp.
    Mẫu tin nhắn đã chốt:
    ```
-   📊 BÁO CÁO ADS dd/mm | <TÊN TÀI KHOẢN hoặc BM>
+   📊 BÁO CÁO ADS dd/mm | <TÊN FANPAGE> (page đang lọc / page có camp chạy trong ngày; không rõ thì tên TK)
    💰 Chi phí: …đ
    🎯 Kết quả: N lead – CPL …đ   (+ từng camp: lead, CPL)
    ▶️ Camp đang chạy: n – Hiệu quả: a | Chưa hiệu quả: b
@@ -58,10 +70,13 @@ Màn khoá mật khẩu → chọn BM → tài khoản → fanpage. 3 tab:
    ⚠️ Chưa hiệu quả: • camp – …đ/lead (giả định: …)
    👉 Đề xuất: 1. … 2. …
    ```
-2. **Dashboard**: chọn thời gian (Từ khi camp chạy, Hôm nay, Hôm qua, Tuần này/Tuần trước T2–CN,
+   Bảng camp: Kết quả và Giá/KQ theo mục tiêu từng camp; CTR, CPC tính theo click vào link.
+2. **Dashboard**: chọn **bộ chỉ số** (Tổng quan, Tin nhắn, Form, Tiếp cận, Lưu lượng, Tương tác – mỗi bộ 5 chỉ số,
+   chỉ tính camp đúng mục tiêu; định nghĩa ở `MET`/`SETS`) + chọn thời gian (Từ khi camp chạy, Hôm nay, Hôm qua, Tuần này/Tuần trước T2–CN,
    7/30 ngày, Tháng này, Toàn bộ, tự chọn) + chọn camp; 6 ô KPI so kỳ trước; "Chỉ số tốt hay chưa tốt";
-   biểu đồ SVG tự vẽ (chi tiêu, kết quả, CPL, CTR, CPM, tỷ trọng); bảng camp có Đánh giá; báo cáo từng
-   ngày; tổng hợp tháng.
+   biểu đồ SVG tự vẽ theo bộ chỉ số + tỷ trọng; bảng camp có Đánh giá, Ngày chạy (từ–đến); báo cáo từng
+   ngày (tổng ngày); báo cáo từng ngày chi tiết (tách camp); tổng hợp tháng. Tiêu đề khung viết hoa.
+4. **Người xem**: duyệt/sửa/xoá người xem (xem phần trên).
 3. **Camp & lệnh**: danh sách camp + ô lệnh tiếng Việt gọi thẳng Meta từ trình duyệt:
    `tắt/bật <tên camp>`, `đặt ngân sách camp X 300k`, `tăng 20% ngân sách camp X`, `giảm … xuống/bớt …`.
    Luôn hiện danh sách để bấm "Xác nhận thực hiện". Quyền lấy qua **Đăng nhập Facebook**

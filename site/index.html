@@ -223,6 +223,40 @@ ol.steps { margin: 0; padding-left: 1.2rem; display: grid; gap: 3px; font-size: 
 .plan label input { accent-color: var(--rose); }
 .plan .nm { flex: 1; overflow-wrap: anywhere; }
 .res-ok { color: var(--good); } .res-err { color: var(--bad); }
+/* tiêu đề khung viết hoa */
+.card h2, .card h3 { text-transform: uppercase; letter-spacing: .05em; }
+.card h3 { font-size: 1rem; }
+/* đăng nhập / đăng ký */
+.seg { display: flex; gap: 4px; padding: 4px; background: var(--surface-2); border-radius: 999px; }
+.seg button { flex: 1; background: transparent; color: var(--muted); padding: 7px 10px; }
+.seg button[aria-selected="true"] { background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }
+.lock-card form { display: grid; gap: 10px; }
+.lock-card .hint { font-size: .78rem; color: var(--muted); margin: 0; }
+.codebox { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .72rem; word-break: break-all; background: var(--surface-2); border-radius: var(--r-sm); padding: 10px 12px; text-align: left; max-height: 140px; overflow: auto; user-select: all; }
+.okbox { background: var(--good-soft); color: var(--ink); border-radius: var(--r-sm); padding: 12px 14px; text-align: left; font-size: .86rem; display: grid; gap: 8px; }
+.who { display: inline-flex; gap: 6px; align-items: center; }
+/* bộ chỉ số */
+.sets { display: flex; flex-wrap: wrap; gap: 8px; }
+.sets button[aria-pressed="true"] { background: var(--rose); color: #fff; border-color: var(--rose); }
+.sets button:disabled { opacity: .45; cursor: default; }
+.sets .n { font-size: .72rem; opacity: .8; margin-left: 4px; }
+.set-note { font-size: .8rem; color: var(--muted); margin-top: 8px; }
+td .sub { display: block; font-size: .72rem; color: var(--muted); font-weight: 400; white-space: nowrap; }
+tr.total td { font-weight: 600; background: var(--surface-2); }
+tr.dayh td { font-weight: 600; background: var(--rose-soft); border-top: 2px solid var(--line); }
+tr.dayh td:first-child { white-space: nowrap; }
+tr.campr td:first-child { padding-left: 26px; font-weight: 400; overflow-wrap: anywhere; min-width: 220px; }
+.more { display: flex; justify-content: center; margin-top: 12px; }
+/* quản lý người xem */
+.acc-pick { display: grid; gap: 10px; margin-top: 10px; }
+.acc-pick fieldset { border: 1px solid var(--line); border-radius: var(--r-sm); padding: 8px 12px 10px; margin: 0; }
+.acc-pick legend { font-size: .76rem; color: var(--muted); padding: 0 6px; text-transform: uppercase; letter-spacing: .05em; }
+.acc-pick label { display: flex; gap: 8px; align-items: center; font-size: .86rem; padding: 4px 0; cursor: pointer; }
+.acc-pick input { accent-color: var(--rose); width: 16px; height: 16px; }
+.ucard { border: 1px solid var(--line); border-radius: var(--r-sm); padding: 14px 16px; display: grid; gap: 6px; }
+.ucard .uh { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: baseline; justify-content: space-between; }
+.ucard .nm { font-weight: 600; }
+.ulist { display: grid; gap: 12px; margin-top: 12px; }
 input[type=password] { font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 9px 16px; width: 100%; min-height: 42px; }
 @media (max-width: 560px) {
   .rec { grid-template-columns: 1fr; }
@@ -235,15 +269,38 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
 </head>
 <body>
 <div class="lock" id="lock" hidden>
-  <form class="lock-card" id="lockForm" autocomplete="on">
+  <div class="lock-card">
     <div class="mark" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 32 32"><path d="M8 22V14M14 22V9M20 22V16M26 22V12" stroke="var(--rose)" stroke-width="3" stroke-linecap="round" fill="none"/></svg></div>
     <h1 style="font-size:1.5rem">Evelyn <em>Ads Studio</em></h1>
-    <p class="muted small" style="margin:0">Báo cáo quảng cáo Meta · Nhập mật khẩu để xem số liệu.</p>
-    <input type="text" name="username" value="evelyn-ads-studio" autocomplete="username" hidden>
-    <input type="password" id="pw" autocomplete="current-password" placeholder="Mật khẩu" aria-label="Mật khẩu" required>
-    <button class="btn-main" type="submit" id="pwBtn">Mở báo cáo</button>
-    <p class="msg err" id="pwErr" aria-live="polite"></p>
-  </form>
+    <p class="muted small" style="margin:0">Báo cáo quảng cáo Meta</p>
+    <div class="seg" role="tablist" aria-label="Đăng nhập hoặc đăng ký">
+      <button type="button" role="tab" id="segLogin" aria-selected="true">Đăng nhập</button>
+      <button type="button" role="tab" id="segReg" aria-selected="false">Đăng ký</button>
+    </div>
+    <form id="lockForm" autocomplete="on">
+      <input type="text" id="lu" name="username" autocomplete="username" placeholder="Tên đăng nhập" aria-label="Tên đăng nhập" autocapitalize="none" spellcheck="false">
+      <input type="password" id="pw" autocomplete="current-password" placeholder="Mật khẩu" aria-label="Mật khẩu" required>
+      <button class="btn-main" type="submit" id="pwBtn">Đăng nhập</button>
+      <p class="hint">Chủ trang: để trống tên đăng nhập (hoặc gõ <b>admin</b>) và nhập mật khẩu chính.</p>
+      <p class="msg err" id="pwErr" aria-live="polite"></p>
+    </form>
+    <form id="regForm" hidden autocomplete="off">
+      <p class="hint" style="text-align:left">Tạo tài khoản để xem Dashboard. Sau khi tạo, gửi <b>mã đăng ký</b> cho chủ trang để được duyệt và cấp quyền xem.</p>
+      <input type="text" id="rName" placeholder="Họ tên" aria-label="Họ tên" required maxlength="60">
+      <input type="text" id="rU" placeholder="Tên đăng nhập (chữ không dấu, số)" aria-label="Tên đăng nhập" required autocapitalize="none" spellcheck="false" maxlength="32" autocomplete="username">
+      <input type="password" id="rPw" placeholder="Mật khẩu (ít nhất 8 ký tự)" aria-label="Mật khẩu" required minlength="8" autocomplete="new-password">
+      <input type="password" id="rPw2" placeholder="Nhập lại mật khẩu" aria-label="Nhập lại mật khẩu" required autocomplete="new-password">
+      <button class="btn-main" type="submit" id="rBtn">Tạo tài khoản</button>
+      <p class="msg err" id="rErr" aria-live="polite"></p>
+      <div class="okbox" id="rOk" hidden>
+        <b>Đã tạo tài khoản! Còn 1 bước:</b>
+        <span>Copy mã dưới đây gửi cho chủ trang (Zalo/Messenger). Khi được duyệt, bạn đăng nhập bằng tên và mật khẩu vừa tạo.</span>
+        <div class="codebox" id="rCode"></div>
+        <button class="btn-main" type="button" id="rCopy">Copy mã đăng ký</button>
+        <p class="msg" id="rCopyNote" aria-live="polite" style="margin:0"></p>
+      </div>
+    </form>
+  </div>
 </div>
 
 <div class="wrap" id="app" hidden>
@@ -251,7 +308,7 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
     <div>
       <h1>Evelyn <em>Ads Studio</em></h1>
       <p class="muted small" id="sync">Đang tải dữ liệu…</p>
-      <p class="muted small" style="margin-top:2px"><span id="autoSync"></span> · <button class="linkbtn" id="logout" type="button">Đăng xuất</button></p>
+      <p class="muted small" style="margin-top:2px"><span class="who" id="who" hidden></span><span id="autoSync"></span> · <button class="linkbtn" id="logout" type="button">Đăng xuất</button></p>
     </div>
     <div class="pickers">
       <div class="pk"><label for="bm">Business (BM)</label><select id="bm"><option>Đang tải…</option></select></div>
@@ -266,6 +323,7 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
     <button class="tab" role="tab" id="t-bao-cao" data-view="bao-cao" aria-selected="true">Báo cáo ngày</button>
     <button class="tab" role="tab" id="t-dashboard" data-view="dashboard" aria-selected="false">Dashboard</button>
     <button class="tab" role="tab" id="t-camp" data-view="camp" aria-selected="false">Camp &amp; lệnh</button>
+    <button class="tab" role="tab" id="t-users" data-view="users" aria-selected="false">Người xem</button>
   </nav>
 
   <!-- ===== Báo cáo ngày ===== -->
@@ -287,8 +345,8 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
           <div><div class="k">CPL (giá / kết quả)</div><div class="v" id="rpCpr">—</div><div class="d" id="rpCprD"></div></div>
         </div>
         <div class="rp-sec"><h4 style="color:var(--ink)">Chỉ số từng camp</h4>
-          <div class="rp-camps"><table><thead><tr><th>Camp</th><th class="r">Chi tiêu</th><th class="r">KQ</th><th class="r">CPL</th><th class="r">CTR</th><th class="r">CPM</th><th class="r">CPC</th><th class="r">Hiển thị</th></tr></thead><tbody id="rpCamps"></tbody></table></div>
-          <p class="small muted" style="margin:6px 0 0">CPL = chi phí mỗi kết quả (lead/tin nhắn) · CPC = chi phí mỗi lượt click · CPM = chi phí mỗi 1.000 lượt hiển thị</p>
+          <div class="rp-camps"><table><thead><tr><th>Camp</th><th class="r">Chi tiêu</th><th class="r">Kết quả</th><th class="r">Giá/KQ</th><th class="r">CTR</th><th class="r">CPM</th><th class="r">CPC</th><th class="r">Hiển thị</th></tr></thead><tbody id="rpCamps"></tbody></table></div>
+          <p class="small muted" style="margin:6px 0 0">Kết quả tính theo mục tiêu từng camp (lead, tin nhắn, người tiếp cận, click link, tương tác). Giá/KQ = chi phí mỗi kết quả (camp tiếp cận: giá mỗi 1.000 người). CTR, CPC tính theo click vào link · CPM = giá 1.000 lượt hiển thị. Dòng Tổng chỉ cộng lead + tin nhắn.</p>
         </div>
         <div class="rp-sec good"><h4>Hiệu quả</h4><ul id="rpGood"></ul></div>
         <div class="rp-sec bad"><h4>Chưa hiệu quả</h4><ul id="rpBad"></ul></div>
@@ -308,7 +366,7 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
           </div>
         </div>
         <div class="card">
-          <div class="card-head"><h3>Tin nhắn gửi sếp</h3><button class="btn-main" id="copyMsg">Copy tin nhắn</button></div>
+          <div class="card-head"><h3>Tin nhắn báo cáo</h3><button class="btn-main" id="copyMsg">Copy tin nhắn</button></div>
           <p class="note" style="margin-top:4px">Copy rồi dán vào Zalo/Messenger. Hoặc chụp màn hình khung báo cáo bên cạnh.</p>
           <div class="msgbox" id="msgText">—</div>
           <p class="msg" id="copyNote" aria-live="polite"></p>
@@ -353,17 +411,15 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
             </div>
           </div>
         </div>
+        <div class="flt-row">
+          <span class="flt-k">Bộ chỉ số</span>
+          <div class="sets" id="sets" role="group" aria-label="Bộ chỉ số theo mục tiêu camp"></div>
+        </div>
+        <p class="set-note" id="setNote"></p>
         <div class="cp-chips" id="cpChips"></div>
       </div>
 
-      <section class="kpis" aria-label="Tổng quan">
-        <div class="kpi"><div class="k">Chi tiêu</div><div class="v" id="kSpend">—</div><div class="s" id="kSpendS">&nbsp;</div></div>
-        <div class="kpi"><div class="k" id="kResK">Kết quả</div><div class="v" id="kRes">—</div><div class="s" id="kResS">&nbsp;</div></div>
-        <div class="kpi"><div class="k">CPL (giá / kết quả)</div><div class="v" id="kCpr">—</div><div class="s" id="kCprS">&nbsp;</div></div>
-        <div class="kpi"><div class="k">CTR</div><div class="v" id="kCtr">—</div><div class="s" id="kCtrS">&nbsp;</div></div>
-        <div class="kpi"><div class="k">CPM</div><div class="v" id="kCpm">—</div><div class="s" id="kCpmS">&nbsp;</div></div>
-        <div class="kpi"><div class="k">CPC</div><div class="v" id="kCpc">—</div><div class="s" id="kCpcS">&nbsp;</div></div>
-      </section>
+      <section class="kpis" id="kpis" aria-label="Tổng quan"></section>
 
       <div class="card">
         <div class="card-head"><h3>Chỉ số tốt hay chưa tốt?</h3><span class="muted small" id="hlNote"></span></div>
@@ -371,33 +427,30 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
         <div class="health" id="health"></div>
       </div>
 
-      <div class="grid2">
-        <div class="card"><h3>Chi tiêu mỗi ngày</h3><p class="note" style="margin-top:4px">Bấm vào cột để mở báo cáo ngày đó.</p><div class="chart" id="chSpend"></div></div>
-        <div class="card"><h3>Kết quả mỗi ngày</h3><p class="note" style="margin-top:4px">Số lead/tin nhắn từ các camp đang chọn.</p><div class="chart" id="chRes"></div></div>
-        <div class="card"><h3>CPL theo ngày</h3><p class="note" style="margin-top:4px">Đường gạch là trung bình khoảng đang xem. Chấm đỏ = ngày đắt.</p><div class="chart" id="chCpr"></div></div>
-        <div class="card"><h3>CTR theo ngày</h3><p class="note" style="margin-top:4px">Tỷ lệ người xem bấm vào quảng cáo. Càng cao càng tốt.</p><div class="chart" id="chCtr"></div></div>
-        <div class="card"><h3>CPM theo ngày</h3><p class="note" style="margin-top:4px">Giá 1.000 lượt hiển thị. Càng thấp càng tốt.</p><div class="chart" id="chCpm"></div></div>
-        <div class="card"><h3>Chi tiêu theo camp</h3><p class="note" style="margin-top:4px">Tỷ trọng tiền của từng camp trong khoảng đang xem.</p><div id="share" class="share"></div></div>
-      </div>
+      <div class="grid2" id="charts"></div>
 
       <div class="card">
         <div class="card-head"><h3>Chi tiết từng camp</h3><span class="muted small" id="campRangeCount"></span></div>
         <p class="note" style="margin-top:4px">Đánh giá dựa trên CPL so với trung bình các camp đang chọn. Bấm tiêu đề cột để sắp xếp.</p>
-        <div class="tbl"><table id="tCampRange"><thead><tr>
-          <th><button data-k="campaign">Camp</button></th><th><button data-k="grade">Đánh giá</button></th><th class="r"><button data-k="days">Ngày chạy</button></th><th class="r"><button data-k="spend">Chi tiêu</button></th>
-          <th class="r"><button data-k="res">Kết quả</button></th><th class="r"><button data-k="cpr">CPL</button></th><th class="r"><button data-k="ctr">CTR</button></th><th class="r"><button data-k="cpm">CPM</button></th><th class="r"><button data-k="cpc">CPC</button></th><th class="r"><button data-k="cvr">Click → KQ</button></th>
-        </tr></thead><tbody></tbody></table></div>
+        <div class="tbl"><table id="tCampRange"><thead></thead><tbody></tbody></table></div>
       </div>
 
       <div class="card">
         <div class="card-head"><h3>Báo cáo từng ngày</h3><span class="muted small" id="dayCount"></span></div>
-        <p class="note" style="margin-top:4px">Mới nhất ở trên. Màu xanh/đỏ so với trung bình khoảng đang xem. Bấm vào một ngày để mở báo cáo ngày đó.</p>
-        <div class="tbl tbl-day" style="margin-top:12px"><table id="tDay"><thead><tr><th>Ngày</th><th class="r">Chi tiêu</th><th class="r">Kết quả</th><th class="r">CPL</th><th class="r">CTR</th><th class="r">CPM</th><th class="r">CPC</th><th class="r">Hiển thị</th><th class="r">Click</th><th class="r">Camp chạy</th></tr></thead><tbody></tbody></table></div>
+        <p class="note" style="margin-top:4px" id="dayNote">Tổng của tất cả camp đang chọn trong từng ngày, mới nhất ở trên. Dòng đầu là tổng cả khoảng. Màu xanh/đỏ so với trung bình khoảng đang xem.</p>
+        <div class="tbl tbl-day" style="margin-top:12px"><table id="tDay"><thead></thead><tbody></tbody></table></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h3>Báo cáo từng ngày chi tiết</h3><span class="muted small" id="dayDetCount"></span></div>
+        <p class="note" style="margin-top:4px">Mỗi ngày tách ra từng camp: dòng hồng là tổng ngày, các dòng bên dưới là chỉ số của từng camp trong ngày đó.</p>
+        <div class="tbl tbl-day" style="margin-top:12px"><table id="tDayDet"><thead></thead><tbody></tbody></table></div>
+        <div class="more" id="dayDetMore" hidden><button class="btn-soft" type="button" id="dayDetBtn">Xem thêm ngày</button></div>
       </div>
 
       <div class="card">
         <h3>Tổng hợp theo tháng</h3>
-        <div class="tbl" style="margin-top:12px"><table id="tMonth"><thead><tr><th>Tháng</th><th class="r">Chi tiêu</th><th class="r">Kết quả</th><th class="r">CPL</th><th class="r">CTR</th><th class="r">Camp</th></tr></thead><tbody></tbody></table></div>
+        <div class="tbl" style="margin-top:12px"><table id="tMonth"><thead></thead><tbody></tbody></table></div>
       </div>
     </div>
   </section>
@@ -430,6 +483,49 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
     </div>
   </section>
 
+  <!-- ===== Người xem (chỉ chủ trang) ===== -->
+  <section id="v-users" class="view" hidden>
+    <div style="display:grid;gap:20px">
+      <div class="card">
+        <div class="card-head"><h2>Người xem</h2><span class="muted small" id="ghState"></span></div>
+        <p class="note">Người xem tự đăng ký ở màn hình đăng nhập (nút <b>Đăng ký</b>) rồi gửi bạn <b>mã đăng ký</b>. Bạn dán mã vào ô dưới, tick tài khoản quảng cáo được xem và bấm Duyệt. Người xem <b>chỉ thấy tab Dashboard</b> của các tài khoản được tick, không sửa hay bật/tắt được gì. Quyền có hiệu lực sau khoảng 1–2 phút.</p>
+        <div id="ghSetup" hidden>
+          <p class="note"><b>Kết nối GitHub (làm 1 lần trên máy này)</b> để web lưu được danh sách người xem:</p>
+          <ol class="steps">
+            <li>Mở <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">trang tạo mã GitHub</a> (đăng nhập tài khoản GitHub của bạn).</li>
+            <li>Token name: <b>Evelyn người xem</b> · Expiration: <b>No expiration</b> (hoặc 1 năm).</li>
+            <li>Repository access: <b>Only select repositories</b> → chọn <b>evelyn-ads-studio</b>.</li>
+            <li>Permissions → Repository permissions → <b>Contents: Read and write</b>.</li>
+            <li>Bấm <b>Generate token</b>, copy mã (bắt đầu bằng <b>github_pat_</b>) rồi dán vào ô dưới.</li>
+          </ol>
+          <div class="row" style="margin-top:10px"><input type="password" id="ghTok" placeholder="Dán mã GitHub (github_pat_…)" aria-label="Mã GitHub" autocomplete="off" style="flex:1;min-width:200px"><button class="btn-main" id="ghSave" type="button">Lưu mã</button></div>
+          <p class="msg" id="ghMsg" aria-live="polite"></p>
+        </div>
+        <p class="small" style="margin:8px 0 0"><button class="linkbtn" id="ghToggle" type="button">Đổi / xoá mã GitHub</button></p>
+      </div>
+
+      <div class="card">
+        <h3>Duyệt người xem mới</h3>
+        <p class="note" style="margin-top:4px">Dán mã đăng ký người đó gửi cho bạn (bắt đầu bằng EAS1-).</p>
+        <textarea id="reqIn" rows="3" placeholder="EAS1-…" aria-label="Mã đăng ký" style="font:inherit;width:100%;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);padding:10px 14px;resize:vertical"></textarea>
+        <p class="msg" id="reqMsg" aria-live="polite"></p>
+        <div id="reqBox" hidden>
+          <div class="ucard"><div class="uh"><span class="nm" id="reqName"></span><span class="muted small" id="reqU"></span></div>
+            <div class="small muted">Tick tài khoản quảng cáo người này được xem:</div>
+            <div class="acc-pick" id="reqAccs"></div>
+            <div class="row" style="margin-top:8px"><button class="btn-main" id="reqOk" type="button">Duyệt &amp; cấp quyền</button><button class="btn-soft" id="reqCancel" type="button">Huỷ</button></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h3>Người xem đã duyệt</h3><button class="btn-soft" id="uReload" type="button">Tải lại</button></div>
+        <p class="note" style="margin-top:4px">Sửa tick rồi bấm <b>Lưu quyền</b>. Bấm <b>Xoá</b> để thu hồi toàn bộ quyền (người đó không mở được số liệu mới nữa).</p>
+        <div class="ulist" id="uList"><div class="empty">Đang tải…</div></div>
+      </div>
+    </div>
+  </section>
+
 </div>
 
 <script>
@@ -458,6 +554,8 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
   const WD = ['Chủ nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
 
   let accounts = [], acc = null, KEY = null, INDEX = null, MANI = {files: {}}, loadSeq = 0;
+  let ROLE = 'admin', ME = null; const ACCT_KEYS = new Map(); // khoá riêng từng tài khoản quảng cáo
+  const isViewer = () => ROLE === 'viewer';
   let rawMonths = [], pageFilter = '', visible = null; const monthCache = new Map();
   const pageName = (pid) => pid === 'none' ? 'Chưa rõ fanpage' : (INDEX?.pages?.[pid] || `Page ${pid}`);
   const campPages = (c) => (c.page_ids && c.page_ids.length ? c.page_ids : ['none']);
@@ -467,44 +565,47 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
   let reportDate = null, range = {from: null, to: null, preset: '30'};
 
   // ---------------- data assembly ----------------
+  // các số cộng dồn được; link = click vào link (CTR/CPC chuẩn), clicks = mọi lượt click
+  const FIELDS = ['spend', 'imp', 'reach', 'clicks', 'link', 'leads', 'msgs', 'eng', 'res', 'resSpend', 'resLink'];
+  const blank = () => { const o = {}; for (const k of FIELDS) o[k] = 0; return o; };
+  const addTo = (t, x) => { for (const k of FIELDS) t[k] += x[k] || 0; return t; };
   function buildFromMonths(monthDocs) {
     daily = new Map();
     const camps = acc.campaigns || [];
-    campTot = camps.map((c) => ({...c, spend: 0, res: 0, imp: 0, clicks: 0, last: null, days: 0}));
+    campTot = camps.map((c) => ({...c, ...blank(), last: null, first: null, days: 0}));
     for (const m of monthDocs) {
       for (const r of m.rows || []) {
-        const [dd, ci, spend, imp, reach, clicks, res] = r;
+        const [dd, ci, spend, imp, reach, clicks, res, link, leads, msgs, eng] = r;
         const date = `${m.month}-${String(dd).padStart(2, '0')}`;
         const c = camps[ci]; if (!c || !isVis(ci)) continue;
         const counts = RES_TYPES.has(c.result_type);
+        const lk = link ?? clicks; // dữ liệu cũ chưa có click link
+        const x = {ci, counts, spend, imp, reach, clicks, link: lk,
+          leads: leads ?? (c.result_type === 'lead' ? res : 0), msgs: msgs ?? (c.result_type === 'message' ? res : 0), eng: eng || 0,
+          res: counts ? res : 0, resSpend: counts ? spend : 0, resLink: counts ? lk : 0};
         let d = daily.get(date);
-        if (!d) { d = {spend: 0, imp: 0, clicks: 0, res: 0, resSpend: 0, camps: new Map()}; daily.set(date, d); }
-        d.spend += spend; d.imp += imp; d.clicks += clicks;
-        if (counts) { d.res += res; d.resSpend += spend; }
-        d.camps.set(ci, {ci, spend, imp, clicks, res: counts ? res : 0, counts});
-        const t = campTot[ci]; t.spend += spend; t.imp += imp; t.clicks += clicks; if (counts) t.res += res;
+        if (!d) { d = {...blank(), camps: new Map()}; daily.set(date, d); }
+        addTo(d, x); d.camps.set(ci, x);
+        const t = campTot[ci]; addTo(t, x);
         if (spend > 0) { t.days++; if (!t.last || date > t.last) t.last = date; if (!t.first || date < t.first) t.first = date; }
       }
     }
   }
+  const derive = (o) => { o.cpr = o.res ? o.resSpend / o.res : null; o.ctr = o.imp ? o.link / o.imp : null; o.cpm = o.imp ? o.spend / o.imp * 1000 : null; o.cpc = o.link ? o.spend / o.link : null; o.cvr = o.resLink ? o.res / o.resLink : null; return o; };
 
   function agg(from, to) {
-    const out = {spend: 0, imp: 0, clicks: 0, res: 0, resSpend: 0, days: 0, per: new Map()};
+    const out = {...blank(), days: 0, per: new Map()};
     for (const [date, d] of daily) {
       if (date < from || date > to) continue;
-      out.spend += d.spend; out.imp += d.imp; out.clicks += d.clicks; out.res += d.res; out.resSpend += d.resSpend;
+      addTo(out, d);
       if (d.spend > 0) out.days++;
       for (const c of d.camps.values()) {
         let p = out.per.get(c.ci);
-        if (!p) { p = {ci: c.ci, spend: 0, imp: 0, clicks: 0, res: 0, days: 0, counts: c.counts}; out.per.set(c.ci, p); }
-        p.spend += c.spend; p.imp += c.imp; p.clicks += c.clicks; p.res += c.res; if (c.spend > 0) p.days++;
+        if (!p) { p = {ci: c.ci, ...blank(), days: 0, counts: c.counts}; out.per.set(c.ci, p); }
+        addTo(p, c); if (c.spend > 0) { p.days++; if (!p.first || date < p.first) p.first = date; if (!p.last || date > p.last) p.last = date; }
       }
     }
-    out.cpr = out.res ? out.resSpend / out.res : null;
-    out.ctr = out.imp ? out.clicks / out.imp : null;
-    out.cpm = out.imp ? out.spend / out.imp * 1000 : null;
-    out.cpc = out.clicks ? out.spend / out.clicks : null;
-    return out;
+    return derive(out);
   }
   const dataDates = () => Array.from(daily.keys()).filter((k) => daily.get(k).spend > 0).sort();
   const lastDate = () => acc?.synced_through || dataDates().slice(-1)[0] || S(new Date());
@@ -528,9 +629,9 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
   // ---------------- vì sao hiệu quả / chưa hiệu quả ----------------
   // CPL = CPM ÷ (1000 × CTR × tỷ lệ ra kết quả) → so 3 yếu tố với trung bình 30 ngày để tìm nguyên nhân
   function diagnose(p, bench, good) {
-    const base = {spend: 0, imp: 0, clicks: 0, res: 0};
-    for (const b of bench.per.values()) if (b.counts) { base.spend += b.spend; base.imp += b.imp; base.clicks += b.clicks; base.res += b.res; }
-    const m = (x) => ({cpm: x.imp ? x.spend / x.imp * 1000 : null, ctr: x.imp ? x.clicks / x.imp : null, cvr: x.clicks ? x.res / x.clicks : null});
+    const base = {spend: 0, imp: 0, link: 0, res: 0};
+    for (const b of bench.per.values()) if (b.counts) { base.spend += b.spend; base.imp += b.imp; base.link += b.link; base.res += b.res; }
+    const m = (x) => ({cpm: x.imp ? x.spend / x.imp * 1000 : null, ctr: x.imp ? x.link / x.imp : null, cvr: x.link ? x.res / x.link : null});
     const t = m(p), B = m(base), own = bench.per.get(p.ci), O = own ? m(own) : {};
     const P = (v) => v == null ? '—' : (v * 100).toFixed(v < 0.1 ? 2 : 1) + '%';
     const out = [], sh = [];
@@ -543,8 +644,8 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
       if (rv != null && rv >= 1.15) { out.push(`Tỷ lệ ra kết quả cao ${P(t.cvr)} số click (TB ${P(B.cvr)}): ưu đãi rõ, form/kịch bản inbox chốt tốt.`); sh.push('tỷ lệ ra lead cao'); }
       if (out.length === 0 || (out.length === 1 && /Dữ liệu còn ít/.test(out[0]))) { out.push(`CPM, CTR và tỷ lệ ra kết quả đều nhỉnh hơn trung bình một chút nên giá/kết quả rẻ hơn.`); sh.push('chi phí ổn định'); }
     } else {
-      if (p.res === 0 && p.clicks === 0) { out.push(`Chưa có lượt click nào sau ${num(p.imp)} hiển thị: nội dung chưa khiến người xem bấm vào.`); sh.push('chưa có click'); }
-      else if (p.res === 0) { out.push(`Có ${num(p.clicks)} click nhưng 0 kết quả: kiểm tra form/trang đích, nút nhắn tin, tốc độ trả lời inbox.`); sh.push('có click nhưng chưa ra lead'); }
+      if (p.res === 0 && p.link === 0) { out.push(`Chưa có lượt click nào sau ${num(p.imp)} hiển thị: nội dung chưa khiến người xem bấm vào.`); sh.push('chưa có click'); }
+      else if (p.res === 0) { out.push(`Có ${num(p.link)} click nhưng 0 kết quả: kiểm tra form/trang đích, nút nhắn tin, tốc độ trả lời inbox.`); sh.push('có click nhưng chưa ra lead'); }
       if (rc != null && rc >= 1.15) { out.push(`CPM đắt ${vnd(t.cpm)} (TB ${vnd(B.cpm)}): tệp quá hẹp, cạnh tranh cao hoặc quảng cáo bị Meta đánh giá thấp → mở rộng tệp, thử mẫu mới.`); sh.push('CPM đắt, tệp hẹp'); }
       if (rt != null && rt <= 0.85) { out.push(`CTR thấp ${P(t.ctr)} (TB ${P(B.ctr)}): hình/video, tiêu đề chưa đủ hấp dẫn → thay nội dung mới.`); sh.push('CTR thấp, nội dung chưa thu hút'); }
       if (O.ctr && t.ctr != null && t.ctr <= O.ctr * 0.75 && !(rt != null && rt <= 0.85)) { out.push(`CTR giảm so với chính camp này 30 ngày (${P(t.ctr)} so với ${P(O.ctr)}): người xem đã nhàm quảng cáo → làm mới nội dung.`); sh.push('người xem đã nhàm quảng cáo'); }
@@ -594,6 +695,15 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
     return {today, prev, bench, avg, per, good, bad, sug: sug.slice(0, 3), mainType, isLatest, runNow, total: visCamps.length};
   }
 
+  // kết quả theo mục tiêu của từng camp (giống cột "Kết quả" trên Ads Manager)
+  function campResult(x, type) {
+    if (type === 'lead' || type === 'message') return {v: x.res, w: resLabel(type), cost: x.res ? x.spend / x.res : null, counts: true};
+    if (type === 'reach') return {v: x.reach, w: 'người tiếp cận', cost: x.reach ? x.spend / x.reach * 1000 : null, per: '/1.000 người'};
+    if (type === 'click') return {v: x.link, w: 'click link', cost: x.link ? x.spend / x.link : null};
+    if (type === 'engagement') return {v: x.eng, w: 'tương tác', cost: x.eng ? x.spend / x.eng : null};
+    return {v: null, w: '', cost: null};
+  }
+
   function renderReport() {
     if (!acc) return;
     const date = reportDate;
@@ -621,18 +731,20 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
     const dC = delta($('rpCprD'), t.cpr, p.cpr, false);
     // bảng chỉ số từng camp
     const rows = a.per.filter((x) => x.spend > 0 || x.res > 0).sort((x, y) => y.spend - x.spend);
-    const cpl = (x) => x.counts && x.res ? x.spend / x.res : null;
     const tb = $('rpCamps'); tb.replaceChildren();
-    const mkRow = (name, sub, x, cls) => el('tr', {className: cls || ''},
-      el('td', {className: 'cn'}, name, sub ? el('span', {className: 'pg', textContent: sub}) : null),
-      el('td', {className: 'r', textContent: vndShort(x.spend)}), el('td', {className: 'r', textContent: x.counts === false ? '—' : num(x.res)}),
-      el('td', {className: 'r' + (cpl(x) && a.avg ? (cpl(x) >= a.avg * 1.4 ? ' bad' : cpl(x) <= a.avg ? ' good' : '') : ''), textContent: x.counts === false ? '—' : vndShort(cpl(x))}),
-      el('td', {className: 'r', textContent: pct(x.imp ? x.clicks / x.imp : null)}), el('td', {className: 'r', textContent: vndShort(x.imp ? x.spend / x.imp * 1000 : null)}),
-      el('td', {className: 'r', textContent: vndShort(x.clicks ? x.spend / x.clicks : null)}), el('td', {className: 'r', textContent: num(x.imp)}));
+    const mkRow = (name, sub, x, r, cls) => {
+      const cost = r.cost, good = r.counts && cost && a.avg ? (cost >= a.avg * 1.4 ? ' bad' : cost <= a.avg ? ' good' : '') : '';
+      return el('tr', {className: cls || ''},
+        el('td', {className: 'cn'}, name, sub ? el('span', {className: 'pg', textContent: sub}) : null),
+        el('td', {className: 'r', textContent: vndShort(x.spend)}),
+        el('td', {className: 'r'}, r.v == null ? '—' : num(r.v), r.w ? el('span', {className: 'sub', textContent: r.w}) : null),
+        el('td', {className: 'r' + good}, cost == null ? '—' : vndShort(cost), r.per ? el('span', {className: 'sub', textContent: r.per}) : null),
+        el('td', {className: 'r', textContent: pct(x.imp ? x.link / x.imp : null)}), el('td', {className: 'r', textContent: vndShort(x.imp ? x.spend / x.imp * 1000 : null)}),
+        el('td', {className: 'r', textContent: vndShort(x.link ? x.spend / x.link : null)}), el('td', {className: 'r', textContent: num(x.imp)}));
+    };
     if (!rows.length) tb.append(el('tr', {}, el('td', {colSpan: 8, className: 'muted', textContent: 'Không có camp nào chạy trong ngày.'})));
-    for (const x of rows) { const c = acc.campaigns[x.ci]; tb.append(mkRow(c.campaign, campPages(c).map(pageName).join(', '), x)); }
-    if (rows.length > 1) tb.append(mkRow('Tổng', '', {spend: t.spend, res: t.res, counts: true, imp: t.imp, clicks: t.clicks, resSpendOverride: true, ...{}}, 'tot'));
-    if (rows.length > 1) { const last = tb.lastChild; last.children[3].textContent = vndShort(t.cpr); last.children[3].className = 'r'; }
+    for (const x of rows) { const c = acc.campaigns[x.ci]; tb.append(mkRow(c.campaign, campPages(c).map(pageName).join(', '), x, campResult(x, c.result_type))); }
+    if (rows.length > 1) tb.append(mkRow('Tổng', 'lead + tin nhắn', t, {v: t.res, cost: t.cpr, counts: true}, 'tot'));
     const list = (ul, items, fmt, none) => { ul.replaceChildren(); if (!items.length) { ul.append(el('li', {className: 'none', textContent: none})); return; } for (const it of items) ul.append(fmt(it)); };
     const campLi = (x) => el('li', {}, el('span', {className: 'n', textContent: cname(x.ci)}), el('span', {className: 'm', textContent: x.res ? `${num(x.res)} · ${vnd(x.spend / x.res)}` : `0 kết quả · chi ${vnd(x.spend)}`}),
       x.why?.length ? el('div', {className: 'why'}, ...x.why.map((w) => el('span', {textContent: w}))) : null);
@@ -645,10 +757,14 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
     const đ = (v) => v == null || !isFinite(v) ? '—' : NF.format(Math.round(v)) + 'đ';
     const [yy, mm, dd] = date.split('-');
     const lines = [];
-    lines.push(`📊 BÁO CÁO ADS ${dd}/${mm} | ${String(/^\d+$/.test(acc.name || '') && acc.bm_name && acc.bm_name !== 'Không thuộc BM' ? acc.bm_name : (acc.name || acc.id)).toUpperCase()}${partial ? ` (tạm tính đến ${acc.synced_time || 'hiện tại'})` : ''}`, '');
+    // tiêu đề: tên fanpage (page đang lọc, hoặc các page có camp chạy trong ngày); không rõ page thì dùng tên tài khoản
+    const pgIds = pageFilter ? [pageFilter] : [...new Set(rows.flatMap((x) => campPages(acc.campaigns[x.ci])))].filter((p) => p !== 'none' && INDEX?.pages?.[p]);
+    const head = pgIds.length ? pgIds.map(pageName).join(' + ') : (/^\d+$/.test(acc.name || '') && acc.bm_name && acc.bm_name !== 'Không thuộc BM' ? acc.bm_name : (acc.name || acc.id));
+    lines.push(`📊 BÁO CÁO ADS ${dd}/${mm} | ${String(head).toUpperCase()}${partial ? ` (tạm tính đến ${acc.synced_time || 'hiện tại'})` : ''}`, '');
     lines.push(`💰 Chi phí: ${đ(t.spend)}`, '');
     const resRows = rows.filter((x) => x.counts).sort((x, y) => y.res - x.res || (x.res ? x.spend / x.res : 1e15) - (y.res ? y.spend / y.res : 1e15));
-    lines.push(`🎯 Kết quả: ${num(t.res)} ${resWord}${t.cpr ? ` – CPL ${đ(t.cpr)}` : ''}`);
+    const mixed = t.leads > 0 && t.msgs > 0;
+    lines.push(`🎯 Kết quả: ${mixed ? `${num(t.res)} kết quả (${num(t.leads)} lead + ${num(t.msgs)} tin nhắn)` : `${num(t.res)} ${resWord}`}${t.cpr ? ` – CPL ${đ(t.cpr)}` : ''}`);
     for (const x of resRows) { const w = resLabel(acc.campaigns[x.ci].result_type); lines.push(x.res ? `• ${cname(x.ci)}: ${num(x.res)} ${w} – CPL ${đ(x.spend / x.res)}` : `• ${cname(x.ci)}: 0 ${w} – đã chi ${đ(x.spend)}`); }
     lines.push('', `▶️ Camp đang chạy: ${ran} – Hiệu quả: ${a.good.length} | Chưa hiệu quả: ${a.bad.length}`);
     const per1 = (x) => `${đ(x.spend / x.res)}/${resLabel(acc.campaigns[x.ci].result_type)}`;
@@ -672,37 +788,76 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
   });
 
   // ---------------- dashboard ----------------
-  let dashSel = null;          // null = mọi camp; Set(ci) = camp đã chọn
+  // Thư viện chỉ số. v(o) tính từ số cộng dồn; up = true: càng cao càng tốt, false: càng thấp càng tốt, null: không xếp tốt/xấu
+  const fx2 = (v) => v == null || !isFinite(v) ? '—' : v.toLocaleString('vi-VN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  const per = (a, b, k = 1) => b ? a / b * k : null;
+  const MET = {
+    spend: {lb: 'Chi tiêu', v: (o) => o.spend, f: vnd, up: null, kind: 'bar', what: 'Tổng tiền đã chi.'},
+    res:   {lb: 'Kết quả', v: (o) => o.res, f: num, up: true, kind: 'bar', what: 'Số lead + tin nhắn mới.', good: 'Ra nhiều kết quả hơn.', bad: 'Ra ít kết quả hơn.'},
+    cpr:   {lb: 'Giá / kết quả', v: (o) => per(o.resSpend, o.res), f: vnd, up: false, kind: 'line', what: 'Tiền cho 1 lead/tin nhắn. Chỉ số quan trọng nhất.', good: 'Mỗi kết quả rẻ hơn.', bad: 'Đắt hơn: xem CTR và CPM để biết do nội dung hay do tệp.'},
+    msgs:  {lb: 'Tin nhắn mới', v: (o) => o.msgs, f: num, up: true, kind: 'bar', what: 'Số cuộc trò chuyện mới bắt đầu.', good: 'Nhiều tin nhắn hơn.', bad: 'Ít tin nhắn hơn.'},
+    cpmsg: {lb: 'Giá / tin nhắn', v: (o) => per(o.spend, o.msgs), f: vnd, up: false, kind: 'line', what: 'Tiền cho 1 tin nhắn mới. Chỉ số quan trọng nhất của camp tin nhắn.', good: 'Mỗi tin nhắn rẻ hơn.', bad: 'Tin nhắn đắt hơn: xem CTR (nội dung) và CPM (tệp).'},
+    leads: {lb: 'Lead', v: (o) => o.leads, f: num, up: true, kind: 'bar', what: 'Số người để lại thông tin.', good: 'Nhiều lead hơn.', bad: 'Ít lead hơn.'},
+    cpl:   {lb: 'CPL – giá / lead', v: (o) => per(o.spend, o.leads), f: vnd, up: false, kind: 'line', what: 'Tiền cho 1 lead. Chỉ số quan trọng nhất của camp form.', good: 'Mỗi lead rẻ hơn.', bad: 'Lead đắt hơn: xem CTR và tỷ lệ click → lead.'},
+    cvl:   {lb: 'Tỷ lệ click → lead', v: (o) => per(o.leads, o.link), f: pct, up: true, kind: 'line', what: 'Bao nhiêu % người bấm vào để lại thông tin.', good: 'Form/ưu đãi chốt tốt hơn.', bad: 'Nhiều người bấm nhưng bỏ form: rút gọn form, làm rõ ưu đãi.'},
+    ctr:   {lb: 'CTR (link)', v: (o) => per(o.link, o.imp), f: pct, up: true, kind: 'line', what: '% người xem bấm vào quảng cáo. Càng cao càng tốt.', good: 'Hình/video, tiêu đề đang thu hút.', bad: 'Nội dung kém hấp dẫn hoặc người xem đã nhàm → thay mẫu mới.'},
+    cpm:   {lb: 'CPM', v: (o) => per(o.spend, o.imp, 1000), f: vnd, up: false, kind: 'line', what: 'Giá 1.000 lượt hiển thị. Càng thấp càng tốt.', good: 'Mua hiển thị rẻ hơn.', bad: 'Tệp hẹp, cạnh tranh cao hoặc mẫu bị chấm điểm thấp.'},
+    cpc:   {lb: 'CPC (link)', v: (o) => per(o.spend, o.link), f: vnd, up: false, kind: 'line', what: 'Giá mỗi lượt bấm vào link.', good: 'Mỗi lượt bấm rẻ hơn.', bad: 'Lượt bấm đắt hơn (CPM tăng hoặc CTR giảm).'},
+    link:  {lb: 'Click vào link', v: (o) => o.link, f: num, up: true, kind: 'bar', what: 'Số lượt bấm vào link/nút.', good: 'Nhiều lượt bấm hơn.', bad: 'Ít lượt bấm hơn.'},
+    reach: {lb: 'Người tiếp cận', v: (o) => o.reach, f: num, up: true, kind: 'bar', what: 'Số người thấy quảng cáo (cộng theo từng ngày).', good: 'Tiếp cận nhiều người hơn.', bad: 'Tiếp cận ít người hơn.'},
+    cpr1k: {lb: 'Giá / 1.000 người tiếp cận', v: (o) => per(o.spend, o.reach, 1000), f: vnd, up: false, kind: 'line', what: 'Tiền để 1.000 người thấy quảng cáo.', good: 'Tiếp cận rẻ hơn.', bad: 'Tiếp cận đắt hơn: tệp hẹp hoặc cạnh tranh cao.'},
+    freq:  {lb: 'Tần suất', v: (o) => per(o.imp, o.reach), f: fx2, up: null, kind: 'line', what: 'Mỗi người thấy quảng cáo trung bình mấy lần/ngày. Trên 3 lần dễ gây nhàm.'},
+    eng:   {lb: 'Lượt tương tác', v: (o) => o.eng, f: num, up: true, kind: 'bar', what: 'Bày tỏ cảm xúc, bình luận, chia sẻ, bấm xem…', good: 'Nhiều tương tác hơn.', bad: 'Ít tương tác hơn.'},
+    cpe:   {lb: 'Giá / tương tác', v: (o) => per(o.spend, o.eng), f: vnd, up: false, kind: 'line', what: 'Tiền cho 1 lượt tương tác.', good: 'Tương tác rẻ hơn.', bad: 'Tương tác đắt hơn: nội dung chưa đủ cuốn.'},
+  };
+  // Bộ chỉ số theo mục tiêu camp (tối đa 5). Chỉ số thứ 2 = kết quả, thứ 3 = giá mỗi kết quả (dùng để đánh giá camp)
+  const SETS = [
+    {id: 'all', lb: 'Tổng quan', type: null, m: ['spend', 'res', 'cpr', 'ctr', 'cpm'], note: 'Mọi camp. Kết quả chỉ cộng lead + tin nhắn.'},
+    {id: 'message', lb: 'Tin nhắn', type: 'message', m: ['spend', 'msgs', 'cpmsg', 'ctr', 'cpm']},
+    {id: 'lead', lb: 'Form (lead)', type: 'lead', m: ['spend', 'leads', 'cpl', 'ctr', 'cvl']},
+    {id: 'reach', lb: 'Tiếp cận', type: 'reach', m: ['spend', 'reach', 'cpr1k', 'freq', 'cpm'], note: 'Người tiếp cận cộng theo từng ngày nên khi xem nhiều ngày có thể cao hơn số người thực trên Ads Manager.'},
+    {id: 'click', lb: 'Lưu lượng (click)', type: 'click', m: ['spend', 'link', 'cpc', 'ctr', 'cpm']},
+    {id: 'engagement', lb: 'Tương tác', type: 'engagement', m: ['spend', 'eng', 'cpe', 'reach', 'cpm']},
+  ];
+  let dashSet = store.get('ads.set') || '';
+  let dashSel = null;          // null = mọi camp của bộ chỉ số; Set(ci) = camp đã chọn
   let dashQuick = 'all';
-  const inSel = (ci) => !dashSel || dashSel.has(ci);
+  let detLimit = 14;
+  const typeOf = (ci) => acc.campaigns[ci]?.result_type;
+  const setCount = (s) => (acc?.campaigns || []).filter((c, ci) => isVis(ci) && campTot[ci]?.spend > 0 && (!s.type || c.result_type === s.type)).length;
+  function curSet() {
+    let s = SETS.find((x) => x.id === dashSet);
+    if (s && setCount(s)) return s;
+    // tự chọn: loại camp chi nhiều tiền nhất
+    const by = {}; campTot.forEach((t, ci) => { if (isVis(ci) && t.spend) by[t.result_type] = (by[t.result_type] || 0) + t.spend; });
+    const top = Object.keys(by).sort((a, b) => by[b] - by[a])[0];
+    return SETS.find((x) => x.type && x.type === top) || SETS[0];
+  }
+  const inSet = (ci) => { const s = curSet(); return !s.type || typeOf(ci) === s.type; };
+  const inSel = (ci) => inSet(ci) && (!dashSel || dashSel.has(ci));
   function aggSel(from, to) {
-    const out = {spend: 0, imp: 0, clicks: 0, res: 0, resSpend: 0, resClicks: 0, days: 0, per: new Map(), byDay: new Map()};
+    const out = {...blank(), days: 0, per: new Map(), byDay: new Map()};
     for (const [date, d] of daily) {
       if (date < from || date > to) continue;
-      const dd = {spend: 0, imp: 0, clicks: 0, res: 0, resSpend: 0, camps: 0};
+      const dd = {...blank(), camps: 0, list: []};
       for (const c of d.camps.values()) {
         if (!inSel(c.ci)) continue;
-        dd.spend += c.spend; dd.imp += c.imp; dd.clicks += c.clicks;
-        if (c.counts) { dd.res += c.res; dd.resSpend += c.spend; out.resClicks += c.clicks; }
+        addTo(dd, c); dd.list.push(c);
         if (c.spend > 0) dd.camps++;
         let p = out.per.get(c.ci);
-        if (!p) { p = {ci: c.ci, spend: 0, imp: 0, clicks: 0, res: 0, days: 0, counts: c.counts}; out.per.set(c.ci, p); }
-        p.spend += c.spend; p.imp += c.imp; p.clicks += c.clicks; p.res += c.res; if (c.spend > 0) p.days++;
+        if (!p) { p = {ci: c.ci, ...blank(), days: 0, counts: c.counts}; out.per.set(c.ci, p); }
+        addTo(p, c); if (c.spend > 0) { p.days++; if (!p.first || date < p.first) p.first = date; if (!p.last || date > p.last) p.last = date; }
       }
       if (!dd.spend && !dd.res) continue;
       out.byDay.set(date, dd);
-      out.spend += dd.spend; out.imp += dd.imp; out.clicks += dd.clicks; out.res += dd.res; out.resSpend += dd.resSpend;
+      addTo(out, dd);
       if (dd.spend > 0) out.days++;
     }
-    out.cpr = out.res ? out.resSpend / out.res : null;
-    out.ctr = out.imp ? out.clicks / out.imp : null;
-    out.cpm = out.imp ? out.spend / out.imp * 1000 : null;
-    out.cpc = out.clicks ? out.spend / out.clicks : null;
-    out.cvr = out.resClicks ? out.res / out.resClicks : null;
-    return out;
+    return derive(out);
   }
   function setRange(preset) {
     const to = lastDate();
+    detLimit = 14;
     if (preset === 'all') range = {from: firstDate(), to, preset};
     else if (preset === 'camps') {
       const ids = dashSel ? [...dashSel] : dashCamps().map((x) => x.ci);
@@ -725,18 +880,32 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
   $$('.rp').forEach((b) => b.addEventListener('click', () => setRange(b.dataset.r)));
   ['rFrom', 'rTo'].forEach((id) => $(id).addEventListener('change', () => {
     const f = $('rFrom').value, t = $('rTo').value; if (!f || !t) return;
-    range = {from: f <= t ? f : t, to: f <= t ? t : f, preset: 'custom'};
+    range = {from: f <= t ? f : t, to: f <= t ? t : f, preset: 'custom'}; detLimit = 14;
     $$('.rp').forEach((b) => b.setAttribute('aria-pressed', 'false'));
     renderDashboard();
   }));
+  const openDay = (date) => { if (isViewer()) return; reportDate = date; show('bao-cao'); renderReport(); };
+
+  // --- chọn bộ chỉ số ---
+  function renderSets() {
+    const box = $('sets'), cur = curSet(); box.replaceChildren();
+    for (const s of SETS) {
+      const n = setCount(s);
+      const b = el('button', {className: 'btn-soft', type: 'button', disabled: !n, title: `${s.m.map((k) => MET[k].lb).join(' · ')}`}, s.lb, el('span', {className: 'n', textContent: `(${n})`}));
+      b.setAttribute('aria-pressed', String(s.id === cur.id));
+      b.addEventListener('click', () => { dashSet = s.id; store.set('ads.set', s.id); dashSel = null; dashQuick = 'all'; renderCpList(); renderDashboard(); });
+      box.append(b);
+    }
+    $('setNote').textContent = `${cur.lb}: ${cur.m.map((k) => MET[k].lb).join(' · ')}. ${cur.type ? `Chỉ tính camp mục tiêu ${cur.lb.toLowerCase()}.` : ''} ${cur.note || ''}`.trim();
+  }
 
   // --- chọn camp ---
-  const dashCamps = () => (acc?.campaigns || []).map((c, ci) => ({c, ci})).filter((x) => isVis(x.ci) && campTot[x.ci]?.spend > 0);
+  const dashCamps = () => (acc?.campaigns || []).map((c, ci) => ({c, ci})).filter((x) => isVis(x.ci) && campTot[x.ci]?.spend > 0 && inSet(x.ci));
   function applyQuick(q) {
     dashQuick = q;
     if (q === 'all') dashSel = null;
     else if (q === 'run') dashSel = new Set(dashCamps().filter((x) => isRunning(x.c)).map((x) => x.ci));
-    else if (q === 'spend') { const a = agg(range.from || firstDate(), range.to || lastDate()); dashSel = new Set([...a.per.values()].filter((p) => p.spend > 0).map((p) => p.ci)); }
+    else if (q === 'spend') { const a = agg(range.from || firstDate(), range.to || lastDate()); dashSel = new Set([...a.per.values()].filter((p) => p.spend > 0 && inSet(p.ci)).map((p) => p.ci)); }
     $$('.cpq').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.q === q)));
     renderCpList(); renderDashboard();
   }
@@ -768,7 +937,7 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('cpPanel').hidden) cpOpen(false); });
 
   let campSort = {k: 'spend', dir: -1};
-  $$('#tCampRange th button').forEach((b) => b.addEventListener('click', () => { campSort = {k: b.dataset.k, dir: campSort.k === b.dataset.k ? -campSort.dir : (['campaign', 'cpr', 'cpm', 'cpc', 'grade'].includes(b.dataset.k) ? 1 : -1)}; renderDashboard(); }));
+  const sortTh = (k, label, cls = '') => { const th = el('th', {className: cls}); const b = el('button', {type: 'button', textContent: label + (campSort.k === k ? (campSort.dir > 0 ? ' ▲' : ' ▼') : '')}); b.addEventListener('click', () => { campSort = {k, dir: campSort.k === k ? -campSort.dir : (k === 'campaign' || k === 'grade' || MET[k]?.up === false ? 1 : -1)}; renderDashboard(); }); th.append(b); return th; };
 
   // so sánh với kỳ trước: trả về {txt, cls}
   function cmp(cur, prev, goodUp) {
@@ -778,119 +947,146 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
     const up = ch > 0;
     return {txt: `${up ? '▲' : '▼'} ${Math.abs(ch * 100).toFixed(0)}% so với kỳ trước`, cls: goodUp == null ? '' : (up === goodUp ? (up ? 'up-good' : 'down-good') : (up ? 'up-bad' : 'down-bad')), ch};
   }
+  // màu ô so với trung bình khoảng đang xem
+  const cc = (v, avg, up, kind = 'line') => v == null || !avg || up == null || kind !== 'line' ? 'r' : (up === false ? v <= avg * 0.9 : v >= avg * 1.1) ? 'r good' : (up === false ? v >= avg * 1.3 : v <= avg * 0.75) ? 'r bad' : 'r';
+  const rangeTxt = (f, l) => !f ? '' : f === l ? `(${fmtShort(f)})` : `(${fmtShort(f)} – ${fmtShort(l)})`;
+  let curMk = SETS[0].m;
 
   function renderDashboard() {
     if (!acc || !range.from) return;
     if (range.preset === 'camps' && !renderDashboard.busy) { renderDashboard.busy = true; try { setRange('camps'); } finally { renderDashboard.busy = false; } return; }
     const {from, to} = range;
+    const set = curSet(), mk = set.m; curMk = mk;
+    renderSets();
     const a = aggSel(from, to);
     const nDays = Math.round((D(to) - D(from)) / 864e5) + 1;
     const pv = aggSel(addDays(from, -nDays), addDays(from, -1));
     const all = dashCamps().length, nSel = dashSel ? dashSel.size : all;
     $('rangeLbl').textContent = `${fmtDate(from)} – ${fmtDate(to)} · ${nDays} ngày · ${nSel}/${all} camp`;
     $$('.cpq').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.q === dashQuick)));
-    $('cpBtn').textContent = dashSel ? `Đã chọn ${nSel} camp ▾` : `Tất cả camp (${all}) ▾`;
+    $('cpBtn').textContent = dashSel ? `Đã chọn ${nSel} camp ▾` : `Tất cả camp ${set.type ? set.lb.toLowerCase() + ' ' : ''}(${all}) ▾`;
     const chips = $('cpChips'); chips.replaceChildren();
     if (dashSel) { const names = [...dashSel].map((ci) => acc.campaigns[ci]?.campaign).filter(Boolean); for (const n of names.slice(0, 8)) chips.append(el('span', {className: 'chip lil', textContent: n})); if (names.length > 8) chips.append(el('span', {className: 'chip mute', textContent: `+${names.length - 8} camp`})); if (!names.length) chips.append(el('span', {className: 'chip bad', textContent: 'Chưa chọn camp nào'})); }
+    const V = (k, o) => MET[k].v(o);
 
-    // types of result among selection
-    const types = new Set([...a.per.values()].filter((p) => p.counts && p.res).map((p) => acc.campaigns[p.ci]?.result_type));
-    const rw = types.size === 1 ? resLabel([...types][0]) : 'kết quả';
-    const kpi = (id, val, c) => { $(id).textContent = val; const s = $(id + 'S'); s.className = 's ' + (c?.cls || ''); s.textContent = c?.txt || ' '; };
-    kpi('kSpend', vnd(a.spend), cmp(a.spend, pv.spend, null));
-    $('kResK').textContent = `Kết quả (${rw})`;
-    kpi('kRes', num(a.res), cmp(a.res, pv.res, true));
-    kpi('kCpr', vnd(a.cpr), cmp(a.cpr, pv.cpr, false));
-    kpi('kCtr', pct(a.ctr), cmp(a.ctr, pv.ctr, true));
-    kpi('kCpm', vnd(a.cpm), cmp(a.cpm, pv.cpm, false));
-    kpi('kCpc', vnd(a.cpc), cmp(a.cpc, pv.cpc, false));
+    // ô KPI
+    const K = $('kpis'); K.replaceChildren();
+    for (const k of mk) {
+      const c = cmp(V(k, a), V(k, pv), MET[k].up, MET[k].kind);
+      K.append(el('div', {className: 'kpi'}, el('div', {className: 'k', textContent: MET[k].lb}), el('div', {className: 'v', textContent: MET[k].f(V(k, a))}), el('div', {className: 's ' + c.cls, textContent: c.txt})));
+    }
 
-    // sức khoẻ chỉ số
-    const H = [
-      ['CPL – giá mỗi ' + rw, a.cpr, pv.cpr, false, vnd, 'Tiền bỏ ra cho 1 ' + rw + '. Chỉ số quan trọng nhất.', 'Rẻ hơn: camp đang ra ' + rw + ' tốt hơn.', 'Đắt hơn: xem CTR, CPM, tỷ lệ click → kết quả bên cạnh để biết do đâu.'],
-      ['CTR – tỷ lệ bấm', a.ctr, pv.ctr, true, pct, 'Nội dung có hấp dẫn không.', 'Hình/video, tiêu đề đang thu hút.', 'Nội dung kém hấp dẫn hoặc người xem đã nhàm → thay mẫu mới.'],
-      ['CPM – giá 1.000 hiển thị', a.cpm, pv.cpm, false, vnd, 'Giá mua lượt hiển thị.', 'Mua hiển thị rẻ hơn.', 'Tệp hẹp, cạnh tranh cao hoặc mẫu bị chấm điểm thấp.'],
-      ['CPC – giá mỗi click', a.cpc, pv.cpc, false, vnd, 'Kết hợp của CPM và CTR.', 'Mỗi lượt bấm rẻ hơn.', 'Mỗi lượt bấm đắt hơn (do CPM tăng hoặc CTR giảm).'],
-      ['Tỷ lệ click → ' + rw, a.cvr, pv.cvr, true, pct, 'Người bấm vào có để lại ' + rw + ' không.', 'Form/inbox/ưu đãi chốt tốt hơn.', 'Kiểm tra form/trang đích, tốc độ trả lời inbox, ưu đãi.'],
-    ];
+    // chỉ số tốt hay chưa tốt
     const hb = $('health'); hb.replaceChildren();
     let nGood = 0, nBad = 0;
-    for (const [t, cur, prev, goodUp, f, what, gtxt, btxt] of H) {
-      const c = cmp(cur, prev, goodUp);
+    for (const k of mk.slice(1)) {
+      const m = MET[k], c = cmp(V(k, a), V(k, pv), m.up);
       const g = c.ch == null || c.cls === '' ? '' : /good/.test(c.cls) ? 'good' : 'bad';
       if (g === 'good') nGood++; if (g === 'bad') nBad++;
-      hb.append(el('div', {className: 'hl ' + g}, el('div', {className: 't', textContent: t}), el('div', {className: 'v', textContent: f(cur)}),
-        el('div', {className: 'c'}, el('b', {textContent: g === 'good' ? 'Tốt hơn ' : g === 'bad' ? 'Kém hơn ' : 'Ổn định '}), document.createTextNode(c.txt.replace(' so với kỳ trước', ''))),
-        el('div', {className: 'm', textContent: g === 'good' ? gtxt : g === 'bad' ? btxt : what})));
+      hb.append(el('div', {className: 'hl ' + g}, el('div', {className: 't', textContent: m.lb}), el('div', {className: 'v', textContent: m.f(V(k, a))}),
+        el('div', {className: 'c'}, el('b', {textContent: g === 'good' ? 'Tốt hơn ' : g === 'bad' ? 'Kém hơn ' : m.up == null && c.ch != null ? 'Thay đổi ' : 'Ổn định '}), document.createTextNode(c.txt.replace(' so với kỳ trước', ''))),
+        el('div', {className: 'm', textContent: g === 'good' ? m.good : g === 'bad' ? m.bad : m.what})));
     }
     $('hlNote').textContent = pv.spend ? `${nGood} chỉ số tốt hơn · ${nBad} chỉ số kém hơn` : 'Kỳ trước không có dữ liệu để so sánh';
 
-    // series
+    // số liệu từng ngày
     const days = [];
     for (let d = from; d <= to; d = addDays(d, 1)) {
-      const x = a.byDay.get(d);
-      days.push({date: d, spend: x?.spend || 0, res: x?.res || 0, imp: x?.imp || 0, clicks: x?.clicks || 0, cpr: x && x.res ? x.resSpend / x.res : null, ctr: x && x.imp ? x.clicks / x.imp : null, cpm: x && x.imp ? x.spend / x.imp * 1000 : null, cpc: x && x.clicks ? x.spend / x.clicks : null, camps: x?.camps || 0});
+      const x = a.byDay.get(d) || {...blank(), camps: 0, list: []};
+      const row = {date: d, camps: x.camps, o: x};
+      for (const k of mk) row[k] = V(k, x);
+      days.push(row);
       if (days.length > 2000) break;
     }
-    drawBars($('chSpend'), days, 'spend', vnd);
-    drawBars($('chRes'), days, 'res', num);
-    drawLine($('chCpr'), days, a.cpr, 'cpr', vnd, true);
-    drawLine($('chCtr'), days, a.ctr, 'ctr', pct, false);
-    drawLine($('chCpm'), days, a.cpm, 'cpm', vnd, true);
 
-    // camp rows
-    const rows = Array.from(a.per.values()).filter((p) => p.spend > 0 || p.res > 0).map((p) => {
-      const cpr = p.counts && p.res ? p.spend / p.res : null;
-      let grade = 'mid', gl = 'Trung bình', gs = 1;
-      if (!p.counts) { grade = 'mid'; gl = 'Không tính KQ'; gs = 3; }
-      else if (!p.res) { if (a.cpr && p.spend >= a.cpr * 0.8) { grade = 'bad'; gl = 'Kém · 0 KQ'; gs = 2; } else { gl = 'Chưa đủ dữ liệu'; gs = 1.5; } }
-      else if (a.cpr && cpr <= a.cpr * 0.9) { grade = 'good'; gl = 'Tốt'; gs = 0; }
-      else if (a.cpr && cpr >= a.cpr * 1.3) { grade = 'bad'; gl = 'Kém'; gs = 2; }
-      return {...p, campaign: cname(p.ci), cpr, ctr: p.imp ? p.clicks / p.imp : null, cpm: p.imp ? p.spend / p.imp * 1000 : null, cpc: p.clicks ? p.spend / p.clicks : null, cvr: p.counts && p.clicks ? p.res / p.clicks : null, type: acc.campaigns[p.ci]?.result_type, grade: gs, gcls: grade, gl};
+    // biểu đồ: 5 chỉ số của bộ + tỷ trọng chi tiêu
+    const C = $('charts'); C.replaceChildren();
+    const boxes = mk.map((k) => {
+      const m = MET[k], box = el('div', {className: 'chart'});
+      const note = m.kind === 'bar' ? (k === 'spend' && !isViewer() ? 'Bấm vào cột để mở báo cáo ngày đó.' : m.what) : `${m.what} Đường gạch là trung bình khoảng đang xem.`;
+      C.append(el('div', {className: 'card'}, el('h3', {textContent: `${m.lb} ${m.kind === 'bar' ? 'mỗi ngày' : 'theo ngày'}`}), el('p', {className: 'note', style: 'margin-top:4px', textContent: note}), box));
+      return box;
     });
-    const k = campSort.k, dir = campSort.dir;
-    rows.sort((x, y) => { const av = x[k], bv = y[k]; if (av == null) return 1; if (bv == null) return -1; return (typeof av === 'string' ? av.localeCompare(bv, 'vi') : av - bv) * dir; });
+    const sh = el('div', {className: 'share'});
+    C.append(el('div', {className: 'card'}, el('h3', {textContent: 'Chi tiêu theo camp'}), el('p', {className: 'note', style: 'margin-top:4px', textContent: 'Tỷ trọng tiền của từng camp trong khoảng đang xem.'}), sh));
+    // vẽ sau khi đủ khung để biết đúng bề rộng
+    mk.forEach((k, i) => { const m = MET[k]; if (m.kind === 'bar') drawBars(boxes[i], days, k, m.f); else drawLine(boxes[i], days, V(k, a), k, m.f, m.up == null ? null : m.up === false); });
+
+    // bảng từng camp
+    const costK = mk[2], resK = mk[1], avgCost = V(costK, a);
+    const rows = Array.from(a.per.values()).filter((p) => p.spend > 0 || p.res > 0).map((p) => {
+      const r = {...p, campaign: cname(p.ci), type: typeOf(p.ci)};
+      for (const k of mk) r[k] = V(k, p);
+      let gc = 'mid', gl = 'Trung bình', gs = 1;
+      if (!set.type && !p.counts) { gl = 'Không tính KQ'; gs = 3; }
+      else if (!r[resK]) { if (avgCost && p.spend >= avgCost * 0.8) { gc = 'bad'; gl = 'Kém · 0 KQ'; gs = 2; } else { gl = 'Chưa đủ dữ liệu'; gs = 1.5; } }
+      else if (avgCost && r[costK] <= avgCost * 0.9) { gc = 'good'; gl = 'Tốt'; gs = 0; }
+      else if (avgCost && r[costK] >= avgCost * 1.3) { gc = 'bad'; gl = 'Kém'; gs = 2; }
+      return Object.assign(r, {grade: gs, gcls: gc, gl});
+    });
+    const sk = mk.includes(campSort.k) || ['campaign', 'grade', 'days'].includes(campSort.k) ? campSort.k : 'spend', dir = campSort.dir;
+    rows.sort((x, y) => { const av = x[sk], bv = y[sk]; if (av == null) return 1; if (bv == null) return -1; return (typeof av === 'string' ? av.localeCompare(bv, 'vi') : av - bv) * dir; });
     $('campRangeCount').textContent = `${rows.length} camp có chi tiêu · ${rows.filter((r) => r.gcls === 'good').length} tốt · ${rows.filter((r) => r.gcls === 'bad').length} kém`;
-    const tb = $('tCampRange').tBodies[0]; tb.replaceChildren();
-    if (!rows.length) tb.append(el('tr', {}, el('td', {colSpan: 10, className: 'muted', textContent: 'Không có camp nào chi tiêu trong khoảng này.'})));
-    const cc = (v, avg, lowGood) => v == null || !avg ? 'r' : (lowGood ? v <= avg * 0.9 : v >= avg * 1.1) ? 'r good' : (lowGood ? v >= avg * 1.3 : v <= avg * 0.75) ? 'r bad' : 'r';
+    const tc = $('tCampRange');
+    tc.tHead.replaceChildren(el('tr', {}, sortTh('campaign', 'Camp'), sortTh('grade', 'Đánh giá'), sortTh('days', 'Ngày chạy', 'r'), ...mk.map((k) => sortTh(k, MET[k].lb, 'r'))));
+    const tb = tc.tBodies[0]; tb.replaceChildren();
+    if (!rows.length) tb.append(el('tr', {}, el('td', {colSpan: 3 + mk.length, className: 'muted', textContent: 'Không có camp nào chi tiêu trong khoảng này.'})));
     for (const r of rows) {
       const why = r.gcls !== 'mid' && r.counts ? diagnose(r, {per: a.per}, r.gcls === 'good') : null;
       tb.append(el('tr', {}, el('td', {className: 'cname', textContent: r.campaign, title: why?.join('\n') || ''}),
         el('td', {}, el('span', {className: 'grade ' + r.gcls, textContent: r.gl, title: why?.join('\n') || ''})),
-        el('td', {className: 'r', textContent: num(r.days)}), el('td', {className: 'r', textContent: vnd(r.spend)}),
-        el('td', {className: 'r', textContent: r.counts ? `${num(r.res)} ${resLabel(r.type)}` : `— (${resLabel(r.type)})`}),
-        el('td', {className: cc(r.cpr, a.cpr, true), textContent: vnd(r.cpr)}), el('td', {className: cc(r.ctr, a.ctr, false), textContent: pct(r.ctr)}),
-        el('td', {className: cc(r.cpm, a.cpm, true), textContent: vnd(r.cpm)}), el('td', {className: cc(r.cpc, a.cpc, true), textContent: vnd(r.cpc)}),
-        el('td', {className: cc(r.cvr, a.cvr, false), textContent: pct(r.cvr)})));
+        el('td', {className: 'r'}, num(r.days), el('span', {className: 'sub', textContent: rangeTxt(r.first, r.last)})),
+        ...mk.map((k) => el('td', {className: cc(r[k], V(k, a), MET[k].up, MET[k].kind), textContent: MET[k].f(r[k])}))));
     }
     // tỷ trọng chi tiêu
-    const sh = $('share'); sh.replaceChildren();
     const bySpend = [...rows].sort((x, y) => y.spend - x.spend);
     const top = bySpend.slice(0, 8), rest = bySpend.slice(8).reduce((s, r) => s + r.spend, 0);
     if (!top.length) sh.append(el('div', {className: 'empty', textContent: 'Không có chi tiêu.'}));
     for (const r of top) { const pc = a.spend ? r.spend / a.spend : 0; sh.append(el('div', {className: 'sr'}, el('span', {className: 'nm', textContent: r.campaign}), el('span', {className: 'vv', textContent: `${vnd(r.spend)} · ${(pc * 100).toFixed(0)}%`}), el('div', {className: 'bar'}, el('i', {style: `width:${(pc * 100).toFixed(1)}%`})))); }
     if (rest > 0) sh.append(el('div', {className: 'sr'}, el('span', {className: 'nm muted', textContent: `${bySpend.length - 8} camp khác`}), el('span', {className: 'vv', textContent: `${vnd(rest)} · ${(rest / a.spend * 100).toFixed(0)}%`}), el('div', {className: 'bar'}, el('i', {style: `width:${(rest / a.spend * 100).toFixed(1)}%`}))));
 
-    // months
+    const metCells = (o, avgObj) => mk.map((k) => el('td', {className: avgObj ? cc(V(k, o), V(k, avgObj), MET[k].up, MET[k].kind) : 'r', textContent: MET[k].f(V(k, o))}));
+    const dayLbl = (d) => `${WD[D(d).getUTCDay()]}, ${fmtDate(d)}`;
+    // tổng hợp tháng
     const months = new Map();
-    for (const [date, x] of a.byDay) { const m = date.slice(0, 7); let y = months.get(m); if (!y) { y = {spend: 0, res: 0, resSpend: 0, imp: 0, clicks: 0, camps: new Set()}; months.set(m, y); } y.spend += x.spend; y.res += x.res; y.resSpend += x.resSpend; y.imp += x.imp; y.clicks += x.clicks; for (const c of daily.get(date).camps.values()) if (c.spend > 0 && inSel(c.ci)) y.camps.add(c.ci); }
-    const tm = $('tMonth').tBodies[0]; tm.replaceChildren();
+    for (const [date, x] of a.byDay) { const m = date.slice(0, 7); let y = months.get(m); if (!y) { y = {...blank(), cs: new Set()}; months.set(m, y); } addTo(y, x); for (const c of x.list) if (c.spend > 0) y.cs.add(c.ci); }
+    const tm = $('tMonth');
+    tm.tHead.replaceChildren(el('tr', {}, el('th', {textContent: 'Tháng'}), ...mk.map((k) => el('th', {className: 'r', textContent: MET[k].lb})), el('th', {className: 'r', textContent: 'Camp'})));
+    const tmb = tm.tBodies[0]; tmb.replaceChildren();
     const mrows = [...months.entries()].filter(([, x]) => x.spend > 0).sort((p, q) => q[0].localeCompare(p[0]));
-    if (!mrows.length) tm.append(el('tr', {}, el('td', {colSpan: 6, className: 'muted', textContent: 'Không có chi tiêu.'})));
-    for (const [m, x] of mrows) tm.append(el('tr', {}, el('td', {textContent: `Tháng ${+m.slice(5)}/${m.slice(0, 4)}`}), el('td', {className: 'r', textContent: vnd(x.spend)}), el('td', {className: 'r', textContent: num(x.res)}), el('td', {className: 'r', textContent: vnd(x.res ? x.resSpend / x.res : null)}), el('td', {className: 'r', textContent: pct(x.imp ? x.clicks / x.imp : null)}), el('td', {className: 'r', textContent: num(x.camps.size)})));
-    // day log
-    const td = $('tDay').tBodies[0]; td.replaceChildren();
-    const drows = days.filter((d) => d.spend > 0 || d.res > 0).reverse();
+    if (!mrows.length) tmb.append(el('tr', {}, el('td', {colSpan: mk.length + 2, className: 'muted', textContent: 'Không có chi tiêu.'})));
+    for (const [m, x] of mrows) tmb.append(el('tr', {}, el('td', {textContent: `Tháng ${+m.slice(5)}/${m.slice(0, 4)}`}), ...metCells(x), el('td', {className: 'r', textContent: num(x.cs.size)})));
+
+    // báo cáo từng ngày (tổng của ngày)
+    const drows = days.filter((d) => d.o.spend > 0 || d.o.res > 0).reverse();
     $('dayCount').textContent = `${drows.length} ngày có chi tiêu`;
-    if (!drows.length) td.append(el('tr', {}, el('td', {colSpan: 10, className: 'muted', textContent: 'Không có ngày nào chi tiêu trong khoảng này.'})));
+    $('dayNote').textContent = `Tổng của các camp đang chọn trong từng ngày, mới nhất ở trên. Dòng đầu là tổng cả khoảng. Màu xanh/đỏ so với trung bình khoảng đang xem.${isViewer() ? '' : ' Bấm vào một ngày để mở báo cáo ngày đó.'}`;
+    const tdy = $('tDay');
+    tdy.tHead.replaceChildren(el('tr', {}, el('th', {textContent: 'Ngày'}), ...mk.map((k) => el('th', {className: 'r', textContent: MET[k].lb})), el('th', {className: 'r', textContent: 'Camp chạy'})));
+    const td = tdy.tBodies[0]; td.replaceChildren();
+    if (!drows.length) td.append(el('tr', {}, el('td', {colSpan: mk.length + 2, className: 'muted', textContent: 'Không có ngày nào chi tiêu trong khoảng này.'})));
+    else td.append(el('tr', {className: 'total'}, el('td', {textContent: `Tổng ${drows.length} ngày`}), ...metCells(a), el('td', {className: 'r', textContent: num(rows.length)})));
     for (const d of drows) {
-      const tr = el('tr', {}, el('td', {textContent: `${WD[D(d.date).getUTCDay()]}, ${fmtDate(d.date)}`, style: 'white-space:nowrap'}), el('td', {className: 'r', textContent: vnd(d.spend)}), el('td', {className: 'r', textContent: num(d.res)}), el('td', {className: cc(d.cpr, a.cpr, true), textContent: vnd(d.cpr)}), el('td', {className: cc(d.ctr, a.ctr, false), textContent: pct(d.ctr)}), el('td', {className: cc(d.cpm, a.cpm, true), textContent: vnd(d.cpm)}), el('td', {className: cc(d.cpc, a.cpc, true), textContent: vnd(d.cpc)}), el('td', {className: 'r', textContent: num(d.imp)}), el('td', {className: 'r', textContent: num(d.clicks)}), el('td', {className: 'r', textContent: num(d.camps)}));
-      tr.style.cursor = 'pointer';
-      tr.addEventListener('click', () => { reportDate = d.date; show('bao-cao'); renderReport(); });
+      const tr = el('tr', {}, el('td', {textContent: dayLbl(d.date), style: 'white-space:nowrap'}), ...metCells(d.o, a), el('td', {className: 'r', textContent: num(d.camps)}));
+      if (!isViewer()) { tr.style.cursor = 'pointer'; tr.addEventListener('click', () => openDay(d.date)); }
       td.append(tr);
     }
+
+    // báo cáo từng ngày chi tiết (tách từng camp)
+    const tdd = $('tDayDet');
+    tdd.tHead.replaceChildren(el('tr', {}, el('th', {textContent: 'Ngày / Camp'}), ...mk.map((k) => el('th', {className: 'r', textContent: MET[k].lb}))));
+    const tdb = tdd.tBodies[0]; tdb.replaceChildren();
+    $('dayDetCount').textContent = `${drows.length} ngày`;
+    if (!drows.length) tdb.append(el('tr', {}, el('td', {colSpan: mk.length + 1, className: 'muted', textContent: 'Không có ngày nào chi tiêu trong khoảng này.'})));
+    for (const d of drows.slice(0, detLimit)) {
+      tdb.append(el('tr', {className: 'dayh'}, el('td', {}, dayLbl(d.date), el('span', {className: 'sub', textContent: `${d.camps} camp chạy`})), ...metCells(d.o)));
+      for (const c of [...d.o.list].filter((c) => c.spend > 0 || c.res > 0).sort((x, y) => y.spend - x.spend))
+        tdb.append(el('tr', {className: 'campr'}, el('td', {textContent: cname(c.ci)}), ...mk.map((k) => el('td', {className: cc(V(k, c), V(k, a), MET[k].up, MET[k].kind), textContent: MET[k].f(V(k, c))}))));
+    }
+    $('dayDetMore').hidden = drows.length <= detLimit;
+    $('dayDetBtn').textContent = `Xem thêm ${Math.min(14, drows.length - detLimit)} ngày`;
   }
+  $('dayDetBtn').addEventListener('click', () => { detLimit += 14; renderDashboard(); });
 
   // ---- charts (hand-drawn SVG) ----
   const NS = 'http://www.w3.org/2000/svg';
@@ -923,8 +1119,8 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
     if (y < 0) y = Math.min(b.height - h, e.clientY - b.top + 14);
     tip.style.left = x + 'px'; tip.style.top = y + 'px';
   }
-  const axFmt = (fmt) => fmt === pct ? (v) => (v * 100).toFixed(v < 0.1 ? 1 : 0) + '%' : fmt === num ? (v) => String(Math.round(v)) : vndShort;
-  const dayTip = (d) => [el('b', {textContent: fmtDate(d.date)}), el('div', {textContent: `Chi tiêu: ${vnd(d.spend)}`}), el('div', {textContent: `Kết quả: ${num(d.res)}${d.cpr ? ' · CPL ' + vnd(d.cpr) : ''}`}), el('div', {textContent: `CTR ${pct(d.ctr)} · CPM ${vnd(d.cpm)}`}), el('div', {textContent: `${d.camps} camp chạy`})];
+  const axFmt = (fmt) => fmt === pct ? (v) => (v * 100).toFixed(v < 0.1 ? 1 : 0) + '%' : fmt === num ? (v) => vndShort(v) : fmt === fx2 ? (v) => v.toFixed(1) : vndShort;
+  const dayTip = (d) => [el('b', {textContent: `${WD[D(d.date).getUTCDay()]}, ${fmtDate(d.date)}`}), ...curMk.map((k) => el('div', {textContent: `${MET[k].lb}: ${MET[k].f(d[k])}`})), el('div', {textContent: `${d.camps} camp chạy`})];
   function drawBars(box, days, key = 'spend', fmt = vnd) {
     if (!days.some((d) => d[key] > 0)) { box.replaceChildren(el('div', {className: 'empty', textContent: 'Không có số liệu trong khoảng này.'})); return; }
     const f = frame(box);
@@ -932,15 +1128,14 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
     yAxis(f, max, axFmt(fmt));
     const n = days.length, bw = f.iw / n, gap = Math.min(4, bw * .25);
     const xpos = (i) => f.m.l + bw * i + bw / 2;
-    const base = key === 'res' ? 'var(--rose)' : 'var(--bar)';
+    const base = key === 'spend' ? 'var(--bar)' : 'var(--rose)';
     days.forEach((d, i) => {
       if (!d[key]) return;
       const h = d[key] / max * f.ih;
-      const r = svgEl('rect', {x: f.m.l + bw * i + gap / 2, y: f.m.t + f.ih - h, width: Math.max(1, bw - gap), height: h, rx: Math.min(4, (bw - gap) / 2), fill: d.date === reportDate ? 'var(--bar-hi)' : base, opacity: key === 'res' ? .8 : 1});
+      const r = svgEl('rect', {x: f.m.l + bw * i + gap / 2, y: f.m.t + f.ih - h, width: Math.max(1, bw - gap), height: h, rx: Math.min(4, (bw - gap) / 2), fill: d.date === reportDate ? 'var(--bar-hi)' : base, opacity: key === 'spend' ? 1 : .8});
       r.addEventListener('pointermove', (e) => { f.tip.replaceChildren(...dayTip(d)); placeTip(box, f.tip, e); r.setAttribute('fill', 'var(--bar-hi)'); });
       r.addEventListener('pointerleave', () => { f.tip.hidden = true; r.setAttribute('fill', d.date === reportDate ? 'var(--bar-hi)' : base); });
-      r.addEventListener('click', () => { reportDate = d.date; show('bao-cao'); renderReport(); });
-      r.style.cursor = 'pointer';
+      if (!isViewer()) { r.addEventListener('click', () => openDay(d.date)); r.style.cursor = 'pointer'; }
       f.svg.append(r);
     });
     xLabels(f, days, xpos);
@@ -957,15 +1152,15 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
     if (avg) { const y = ypos(avg); f.svg.append(svgEl('line', {x1: f.m.l, x2: f.W - f.m.r, y1: y, y2: y, stroke: 'var(--muted)', 'stroke-dasharray': '4 4'})); const t = svgEl('text', {x: f.W - f.m.r, y: y - 5, 'text-anchor': 'end'}); t.textContent = 'TB ' + axFmt(fmt)(avg); f.svg.append(t); }
     const d = pts.map((p, k) => `${k ? 'L' : 'M'}${xpos(p.i).toFixed(1)},${ypos(p[key]).toFixed(1)}`).join('');
     f.svg.append(svgEl('path', {d, fill: 'none', stroke: 'var(--rose)', 'stroke-width': 2, 'stroke-linejoin': 'round', 'stroke-linecap': 'round'}));
-    const isBad = (v) => avg && (highIsBad ? v >= avg * 1.3 : v <= avg * 0.75);
-    const isGood = (v) => avg && (highIsBad ? v <= avg * 0.9 : v >= avg * 1.1);
+    const isBad = (v) => avg && highIsBad != null && (highIsBad ? v >= avg * 1.3 : v <= avg * 0.75);
+    const isGood = (v) => avg && highIsBad != null && (highIsBad ? v <= avg * 0.9 : v >= avg * 1.1);
     for (const p of pts) {
       const col = isBad(p[key]) ? 'var(--bad)' : isGood(p[key]) ? 'var(--good)' : 'var(--rose)';
       const c = svgEl('circle', {cx: xpos(p.i), cy: ypos(p[key]), r: pts.length > 60 ? 2.5 : 3.5, fill: col, stroke: 'var(--surface)', 'stroke-width': 1.5});
       const hit = svgEl('circle', {cx: xpos(p.i), cy: ypos(p[key]), r: 9, fill: 'transparent'});
       hit.addEventListener('pointermove', (e) => { f.tip.replaceChildren(...dayTip(p)); placeTip(box, f.tip, e); c.setAttribute('r', 5); });
       hit.addEventListener('pointerleave', () => { f.tip.hidden = true; c.setAttribute('r', pts.length > 60 ? 2.5 : 3.5); });
-      hit.addEventListener('click', () => { reportDate = p.date; show('bao-cao'); renderReport(); }); hit.style.cursor = 'pointer';
+      if (!isViewer()) { hit.addEventListener('click', () => openDay(p.date)); hit.style.cursor = 'pointer'; }
       f.svg.append(c, hit);
     }
     xLabels(f, days, xpos);
@@ -999,9 +1194,10 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
   ['cq', 'cOnlyRun', 'cOnlySpend'].forEach((id) => $(id).addEventListener(id === 'cq' ? 'input' : 'change', renderCamps));
 
   // ---------------- views ----------------
-  const VIEWS = ['bao-cao', 'dashboard', 'camp'];
+  const VIEWS = ['bao-cao', 'dashboard', 'camp', 'users'];
   function show(v) {
     if (!VIEWS.includes(v)) v = 'bao-cao';
+    if (isViewer()) v = 'dashboard'; // người xem chỉ được xem Dashboard
     for (const x of VIEWS) { $('v-' + x).hidden = x !== v; $('t-' + x).setAttribute('aria-selected', String(x === v)); }
     if (location.hash.slice(1) !== v) history.replaceState(null, '', '#' + v);
     renderView(v);
@@ -1011,6 +1207,7 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
     if (v === 'bao-cao') renderReport();
     else if (v === 'dashboard') { if (!range.from) setRange(range.preset || '30'); else renderDashboard(); }
     else if (v === 'camp') renderCamps();
+    else if (v === 'users') renderUsers();
   }
   $$('.tab').forEach((b) => b.addEventListener('click', () => show(b.dataset.view)));
   window.addEventListener('hashchange', () => show(location.hash.slice(1)));
@@ -1051,7 +1248,7 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
       reportDate = null; range = {from: null, to: null, preset: range.preset || '30'}; dashSel = null; dashQuick = 'all';
       const seq = ++loadSeq;
       $('sync').textContent = 'Đang tải số liệu…';
-      Promise.all((acc.months || []).map((mo) => loadEnc(`data/days/${id}__${mo}.json`).catch(() => null))).then((docs) => {
+      Promise.all((acc.months || []).map((mo) => loadMonth(id, mo))).then((docs) => {
         if (seq !== loadSeq) return;
         rawMonths = docs.filter(Boolean); monthCache.set(id, rawMonths);
         buildFromMonths(rawMonths);
@@ -1069,6 +1266,7 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
     if (!acc) return;
     $('sync').textContent = `${acc.name} · BM ${acc.bm_name || '—'} · dữ liệu ${acc.first_date ? fmtDate(acc.first_date) : '—'} → ${fmtDate(lastDate())}`;
     const w = [];
+    if (isViewer()) { $('warn').hidden = true; return; }
     if (acc.error) w.push(`Lần cập nhật gần nhất của tài khoản này bị lỗi: ${acc.error}. Đang hiển thị số liệu cũ.`);
     if (INDEX?.token_expires && INDEX.token_expires !== 'never') {
       const days = Math.floor((new Date(INDEX.token_expires) - Date.now()) / 864e5);
@@ -1303,6 +1501,7 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
     return '';
   }
   async function refreshFB() {
+    if (isViewer()) return;
     const t = await fbToken(true);
     if (t) { fbState('✓ Đã đăng nhập Facebook – có thể bật/tắt camp.', 'res-ok'); $('fbLogin').textContent = 'Đã đăng nhập'; }
     else if (wtok.get()) fbState('Đang dùng mã thủ công đã lưu.');
@@ -1319,12 +1518,139 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
   document.querySelector('[data-tab="camp"], #tab-camp, button[data-view="camp"]')?.addEventListener('click', refreshFB);
   setTimeout(refreshFB, 1500);
 
+  // ---------------- quản lý người xem (chỉ chủ trang) ----------------
+  // Duyệt = ghi site/data/users/<uid>.json lên GitHub; máy đồng bộ tự gói khoá các tài khoản được tick cho người đó.
+  const GH_REPO = 'maiworkhub-dot/evelyn-ads-studio', GH_DIR = 'site/data/users';
+  const ghTok = { get() { try { return localStorage.getItem('ads.ghtoken') || ''; } catch { return ''; } }, set(v) { try { v ? localStorage.setItem('ads.ghtoken', v) : localStorage.removeItem('ads.ghtoken'); } catch {} } };
+  async function gh(path, opt = {}) {
+    const r = await fetch(`https://api.github.com/repos/${GH_REPO}/${path}`, {method: opt.method || 'GET', body: opt.body, cache: 'no-store',
+      headers: {Accept: 'application/vnd.github+json', Authorization: `Bearer ${ghTok.get()}`, 'X-GitHub-Api-Version': '2022-11-28'}});
+    if (r.status === 404 && opt.allow404) return null;
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(r.status === 401 ? 'mã GitHub sai hoặc hết hạn' : r.status === 403 ? 'mã GitHub chưa có quyền ghi (Contents: Read and write)' : (j.message || `GitHub lỗi ${r.status}`));
+    return j;
+  }
+  const utf8b64 = (t) => b64(new TextEncoder().encode(t));
+  const b64utf8 = (t) => new TextDecoder().decode(unb64(t.replace(/\s/g, '')));
+  let ghEdit = false, usersCache = null; const pendingSave = new Set();
+  function ghUI() {
+    const has = !!ghTok.get();
+    $('ghSetup').hidden = has && !ghEdit;
+    $('ghToggle').hidden = !has;
+    $('ghState').textContent = has ? '✓ Đã kết nối GitHub' : 'Chưa kết nối GitHub';
+  }
+  $('ghToggle').addEventListener('click', () => { ghEdit = !ghEdit; ghUI(); });
+  $('ghSave').addEventListener('click', async () => {
+    const v = $('ghTok').value.trim(), m = $('ghMsg');
+    if (!v) { ghTok.set(''); ghEdit = false; usersCache = null; m.textContent = ''; renderUsers(); return; }
+    m.className = 'msg'; m.textContent = 'Đang kiểm tra mã…';
+    const old = ghTok.get(); ghTok.set(v);
+    try {
+      const r = await gh('');
+      if (!r.permissions?.push) throw new Error('mã chưa có quyền ghi vào kho evelyn-ads-studio');
+      $('ghTok').value = ''; m.className = 'msg ok'; m.textContent = 'Đã kết nối GitHub trên máy này.'; ghEdit = false; usersCache = null; renderUsers(true);
+    } catch (e) { ghTok.set(old); m.className = 'msg err'; m.textContent = 'Không dùng được mã: ' + e.message; }
+  });
+
+  // ô tick tài khoản quảng cáo, nhóm theo BM
+  function accPicker(box, chosen) {
+    box.replaceChildren();
+    const byBm = new Map();
+    for (const a of [...accounts].sort((x, y) => x.name.localeCompare(y.name, 'vi'))) { const k = a.bm_name || 'Không thuộc BM'; if (!byBm.has(k)) byBm.set(k, []); byBm.get(k).push(a); }
+    for (const [bm, list] of [...byBm.entries()].sort((x, y) => x[0].localeCompare(y[0], 'vi'))) {
+      box.append(el('fieldset', {}, el('legend', {textContent: bm}), ...list.map((a) => { const cb = el('input', {type: 'checkbox', checked: chosen.has(String(a.id))}); cb.dataset.id = a.id; return el('label', {}, cb, el('span', {textContent: `${a.name} · ${a.id}`})); })));
+    }
+    return () => [...box.querySelectorAll('input:checked')].map((x) => String(x.dataset.id));
+  }
+  async function putUser(uid, rec, sha, msg) {
+    await gh(`contents/${GH_DIR}/${uid}.json`, {method: 'PUT', body: JSON.stringify({message: msg, branch: 'main', content: utf8b64(JSON.stringify(rec, null, 1) + '\n'), ...(sha ? {sha} : {})})});
+    pendingSave.add(uid);
+  }
+
+  // duyệt người mới
+  let reqData = null, reqGet = null;
+  $('reqIn').addEventListener('input', async () => {
+    const t = $('reqIn').value.trim(), m = $('reqMsg'); reqData = null; $('reqBox').hidden = true; m.textContent = '';
+    if (!t) return;
+    try {
+      const r = JSON.parse(unb64url(t.replace(/^EAS1-/, '').replace(/\s/g, '')));
+      if (r.v !== 1 || !/^[a-z0-9._-]{3,32}$/.test(r.u || '') || !r.pub || !r.priv?.ct || !r.salt) throw 0;
+      reqData = r;
+      $('reqName').textContent = r.name || r.u; $('reqU').textContent = `Tên đăng nhập: ${r.u} · đăng ký ${new Date(r.t).toLocaleString('vi-VN')}`;
+      reqGet = accPicker($('reqAccs'), new Set());
+      $('reqBox').hidden = false;
+    } catch { m.className = 'msg err'; m.textContent = 'Mã không đúng. Hãy copy lại toàn bộ mã (bắt đầu bằng EAS1-).'; }
+  });
+  $('reqCancel').addEventListener('click', () => { $('reqIn').value = ''; reqData = null; $('reqBox').hidden = true; });
+  $('reqOk').addEventListener('click', async () => {
+    const m = $('reqMsg');
+    if (!ghTok.get()) { m.className = 'msg err'; m.textContent = 'Hãy kết nối GitHub ở khung trên trước.'; return; }
+    const ids = reqGet(); if (!ids.length) { m.className = 'msg err'; m.textContent = 'Hãy tick ít nhất 1 tài khoản quảng cáo.'; return; }
+    $('reqOk').disabled = true; m.className = 'msg'; m.textContent = 'Đang lưu…';
+    try {
+      const uid = await uidOf(reqData.u);
+      const ex = await gh(`contents/${GH_DIR}/${uid}.json?ref=main`, {allow404: true});
+      if (ex && JSON.parse(b64utf8(ex.content)).pub !== reqData.pub && !confirm(`Tên đăng nhập “${reqData.u}” đã có người dùng. Thay bằng người đăng ký mới này?`)) { m.textContent = ''; return; }
+      const rec = {...reqData, role: 'viewer', accounts: ids, approved_at: new Date().toISOString()};
+      await putUser(uid, rec, ex?.sha, `Duyệt người xem ${reqData.u}`);
+      m.className = 'msg ok'; m.textContent = `Đã duyệt ${reqData.name || reqData.u}. Khoảng 1–2 phút nữa người đó đăng nhập được.`;
+      $('reqIn').value = ''; $('reqBox').hidden = true; reqData = null; usersCache = null; renderUsers(true);
+    } catch (e) { m.className = 'msg err'; m.textContent = 'Không lưu được: ' + e.message; }
+    finally { $('reqOk').disabled = false; }
+  });
+
+  async function renderUsers(force) {
+    ghUI();
+    const box = $('uList');
+    if (!ghTok.get()) { box.replaceChildren(el('div', {className: 'empty', textContent: 'Kết nối GitHub ở khung trên để xem và duyệt người xem.'})); return; }
+    if (usersCache && !force) return drawUsers();
+    box.replaceChildren(el('div', {className: 'empty', textContent: 'Đang tải…'}));
+    try {
+      const files = ((await gh(`contents/${GH_DIR}?ref=main`, {allow404: true})) || []).filter((f) => f.name.endsWith('.json'));
+      const keys = new Set(((await gh('contents/site/data/keys?ref=main', {allow404: true})) || []).map((f) => f.name));
+      usersCache = [];
+      for (const f of files) {
+        const j = await gh(`contents/${GH_DIR}/${f.name}?ref=main`);
+        usersCache.push({uid: f.name.slice(0, -5), sha: j.sha, rec: JSON.parse(b64utf8(j.content)), ready: keys.has(f.name)});
+      }
+      drawUsers();
+    } catch (e) { box.replaceChildren(el('p', {className: 'msg err', textContent: 'Không tải được danh sách: ' + e.message})); }
+  }
+  function drawUsers() {
+    const box = $('uList'); box.replaceChildren();
+    if (!usersCache.length) { box.append(el('div', {className: 'empty', textContent: 'Chưa có người xem nào.'})); return; }
+    for (const x of usersCache.sort((p, q) => (p.rec.name || p.rec.u).localeCompare(q.rec.name || q.rec.u, 'vi'))) {
+      const picks = el('div', {className: 'acc-pick'}), get = accPicker(picks, new Set((x.rec.accounts || []).map(String)));
+      const msg = el('p', {className: 'msg'});
+      const save = el('button', {className: 'btn-main', type: 'button', textContent: 'Lưu quyền'});
+      const del = el('button', {className: 'btn-soft', type: 'button', textContent: 'Xoá người xem'});
+      const st = pendingSave.has(x.uid) ? el('span', {className: 'chip warn', textContent: 'Đang cập nhật quyền (1–2 phút)'}) : x.ready ? el('span', {className: 'chip good', textContent: 'Đã cấp quyền'}) : el('span', {className: 'chip warn', textContent: 'Đang cấp quyền'});
+      save.addEventListener('click', async () => {
+        const ids = get(); if (!ids.length) { msg.className = 'msg err'; msg.textContent = 'Tick ít nhất 1 tài khoản, hoặc bấm Xoá người xem.'; return; }
+        save.disabled = true; msg.className = 'msg'; msg.textContent = 'Đang lưu…';
+        try { await putUser(x.uid, {...x.rec, accounts: ids, updated_at: new Date().toISOString()}, x.sha, `Sửa quyền người xem ${x.rec.u}`); usersCache = null; renderUsers(true); }
+        catch (e) { msg.className = 'msg err'; msg.textContent = 'Không lưu được: ' + e.message; save.disabled = false; }
+      });
+      del.addEventListener('click', async () => {
+        if (!confirm(`Xoá người xem “${x.rec.name || x.rec.u}”? Người này sẽ không xem được số liệu nữa.`)) return;
+        del.disabled = true; msg.className = 'msg'; msg.textContent = 'Đang xoá…';
+        try { await gh(`contents/${GH_DIR}/${x.uid}.json`, {method: 'DELETE', body: JSON.stringify({message: `Xoá người xem ${x.rec.u}`, sha: x.sha, branch: 'main'})}); usersCache = null; renderUsers(true); }
+        catch (e) { msg.className = 'msg err'; msg.textContent = 'Không xoá được: ' + e.message; del.disabled = false; }
+      });
+      box.append(el('div', {className: 'ucard'},
+        el('div', {className: 'uh'}, el('span', {}, el('span', {className: 'nm', textContent: x.rec.name || x.rec.u}), el('span', {className: 'muted small', textContent: `  ·  ${x.rec.u}`})), st),
+        el('div', {className: 'small muted', textContent: `Duyệt ${x.rec.approved_at ? new Date(x.rec.approved_at).toLocaleDateString('vi-VN') : '—'} · được xem ${(x.rec.accounts || []).length} tài khoản · chỉ xem Dashboard`}),
+        picks, el('div', {className: 'row', style: 'margin-top:6px'}, save, del), msg));
+    }
+  }
+  $('uReload').addEventListener('click', () => renderUsers(true));
+
   // ---------------- data (encrypted static files) ----------------
   const b64 = (u8) => btoa(String.fromCharCode(...u8));
   const unb64 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
   async function deriveKey(password, salt, iter) {
     const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveKey']);
-    return crypto.subtle.deriveKey({name: 'PBKDF2', salt: unb64(salt), iterations: iter, hash: 'SHA-256'}, base, {name: 'AES-GCM', length: 256}, true, ['decrypt']);
+    return crypto.subtle.deriveKey({name: 'PBKDF2', salt: unb64(salt), iterations: iter || 200000, hash: 'SHA-256'}, base, {name: 'AES-GCM', length: 256}, true, ['decrypt']);
   }
   async function decrypt(key, box) {
     const pt = await crypto.subtle.decrypt({name: 'AES-GCM', iv: unb64(box.iv)}, key, unb64(box.ct));
@@ -1335,36 +1661,137 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
     if (!r.ok) throw new Error(`Không tải được ${url}`);
     return r.json();
   }
-  async function loadEnc(rel) { return decrypt(KEY, await getJSON(rel, MANI.files[rel.replace(/^data\//, '')])); }
+  async function loadEnc(rel, key = KEY) { return decrypt(key, await getJSON(rel, MANI.files[rel.replace(/^data\//, '')])); }
+  // số liệu tháng: mã hoá bằng khoá riêng của tài khoản (dữ liệu cũ: khoá chính)
+  async function loadMonth(id, mo) {
+    const rel = `data/days/${id}__${mo}.json`;
+    let box; try { box = await getJSON(rel, MANI.files[rel.slice(5)]); } catch { return null; }
+    for (const k of [ACCT_KEYS.get(id), KEY].filter(Boolean)) { try { return await decrypt(k, box); } catch {} }
+    return null;
+  }
+  const importAes = (rawB64) => crypto.subtle.importKey('raw', unb64(rawB64), {name: 'AES-GCM'}, false, ['decrypt']);
+  const sha16 = async (t) => Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(t)))).map((x) => x.toString(16).padStart(2, '0')).join('').slice(0, 16);
+  const normU = (u) => String(u || '').trim().toLowerCase();
+  const uidOf = (u) => sha16(normU(u));
+  const ADMIN_NAMES = ['', 'admin', 'evelyn-ads-studio'];
+  // mở gói khoá của người xem (ECDH P-256, khớp scripts/crypto.mjs)
+  async function unseal(priv, box) {
+    const epk = await crypto.subtle.importKey('raw', unb64(box.epk), {name: 'ECDH', namedCurve: 'P-256'}, false, []);
+    const bits = new Uint8Array(await crypto.subtle.deriveBits({name: 'ECDH', public: epk}, priv, 256));
+    const tag = new TextEncoder().encode('evelyn-ads-studio/v1'), mix = new Uint8Array(bits.length + tag.length); mix.set(bits); mix.set(tag, bits.length);
+    const k = await crypto.subtle.importKey('raw', await crypto.subtle.digest('SHA-256', mix), {name: 'AES-GCM'}, false, ['decrypt']);
+    return decrypt(k, box);
+  }
 
   let META = null;
   async function unlockWith(key) {
     await decrypt(key, META.check); // sai mật khẩu => lỗi
-    KEY = key;
+    KEY = key; ROLE = 'admin'; ME = null;
     MANI = await getJSON('data/manifest.json').catch(() => ({files: {}}));
     INDEX = await decrypt(KEY, await getJSON('data/index.json'));
+    try { const ring = await decrypt(KEY, await getJSON('data/keyring.json')); for (const [id, k] of Object.entries(ring.keys || {})) ACCT_KEYS.set(id, await importAes(k)); } catch { /* dữ liệu định dạng cũ */ }
     accounts = (INDEX.accounts || []).map((a) => ({...a, _id: a.id}));
-    const t = new Date(INDEX.synced_at);
+    enterApp();
+  }
+  // người xem: chỉ mở được các tài khoản chủ trang đã cấp
+  async function openViewer(uid, pkBytes, rec) {
+    const priv = await crypto.subtle.importKey('pkcs8', pkBytes, {name: 'ECDH', namedCurve: 'P-256'}, false, ['deriveBits']);
+    let box; try { box = await getJSON(`data/keys/${uid}.json`); } catch { throw new Error('Tài khoản đã được duyệt nhưng web đang cấp quyền. Thử lại sau 2–3 phút.'); }
+    const grant = await unseal(priv, box);
+    const ids = Object.keys(grant.accounts || {});
+    if (!ids.length) throw new Error('Tài khoản chưa được cấp quyền xem tài khoản quảng cáo nào. Liên hệ chủ trang.');
+    MANI = await getJSON('data/manifest.json').catch(() => ({files: {}}));
+    const pages = {}, list = []; let synced = null, apiV = null;
+    for (const id of ids) {
+      const k = await importAes(grant.accounts[id]); ACCT_KEYS.set(id, k);
+      try { const d = await loadEnc(`data/acct/${id}.json`, k); Object.assign(pages, d.pages || {}); list.push(d.account); if (!synced || d.synced_at > synced) synced = d.synced_at; apiV = d.api_version; } catch { /* chưa có dữ liệu */ }
+    }
+    KEY = null; ROLE = 'viewer'; ME = {name: rec.name || rec.u, u: rec.u};
+    INDEX = {synced_at: synced, api_version: apiV, pages, accounts: list};
+    accounts = list.map((a) => ({...a, _id: a.id}));
+    enterApp();
+  }
+  function enterApp() {
+    for (const id of ['t-bao-cao', 't-camp', 't-users']) $(id).hidden = isViewer();
+    $('who').hidden = !ME; if (ME) $('who').textContent = `👤 ${ME.name} · chỉ xem · `;
+    const t = new Date(INDEX.synced_at || Date.now());
     $('autoSync').textContent = `Tự cập nhật lần cuối ${t.toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'})} ngày ${t.toLocaleDateString('vi-VN')}`;
     $('lock').hidden = true; $('app').hidden = false;
-    show(location.hash.slice(1) || 'bao-cao');
-    if (!accounts.length) { $('sync').textContent = 'Chưa có tài khoản nào. Kiểm tra mã truy cập Meta.'; return; }
+    show(isViewer() ? 'dashboard' : (location.hash.slice(1) || 'bao-cao'));
+    if (!accounts.length) { $('sync').textContent = isViewer() ? 'Chưa có số liệu cho tài khoản được cấp. Thử lại sau.' : 'Chưa có tài khoản nào. Kiểm tra mã truy cập Meta.'; return; }
     fillBm();
   }
   $('lockForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = $('pwBtn'); btn.disabled = true; $('pwErr').textContent = '';
+    const u = normU($('lu').value);
     try {
-      const key = await deriveKey($('pw').value, META.salt, META.iter);
-      await unlockWith(key);
-      try { localStorage.setItem('ads.key', b64(new Uint8Array(await crypto.subtle.exportKey('raw', key))) + '|' + META.salt); } catch {}
-    } catch (err) { $('pwErr').textContent = META ? 'Mật khẩu không đúng.' : 'Chưa có dữ liệu. Hãy chạy đồng bộ lần đầu trên GitHub.'; }
+      if (ADMIN_NAMES.includes(u)) {
+        let key;
+        try { key = await deriveKey($('pw').value, META.salt, META.iter); await decrypt(key, META.check); }
+        catch { throw new Error(META ? 'Mật khẩu không đúng.' : 'Chưa có dữ liệu. Hãy chạy đồng bộ lần đầu trên GitHub.'); }
+        await unlockWith(key);
+        try { localStorage.setItem('ads.key', b64(new Uint8Array(await crypto.subtle.exportKey('raw', key))) + '|' + META.salt); } catch {}
+      } else {
+        const uid = await uidOf(u);
+        let rec; try { rec = await getJSON(`data/users/${uid}.json`); } catch { throw new Error('Tên đăng nhập chưa được duyệt hoặc không đúng. Nếu vừa đăng ký, hãy gửi mã đăng ký cho chủ trang.'); }
+        let pk;
+        try { const k = await deriveKey($('pw').value, rec.salt, rec.iter); pk = new Uint8Array(await crypto.subtle.decrypt({name: 'AES-GCM', iv: unb64(rec.priv.iv)}, k, unb64(rec.priv.ct))); }
+        catch { throw new Error('Mật khẩu không đúng.'); }
+        await openViewer(uid, pk, rec);
+        try { localStorage.setItem('ads.viewer', JSON.stringify({uid, pk: b64(pk)})); } catch {}
+      }
+    } catch (err) { $('pwErr').textContent = err.message || String(err); }
     finally { btn.disabled = false; }
   });
-  $('logout').addEventListener('click', () => { try { localStorage.removeItem('ads.key'); } catch {} location.reload(); });
+  $('logout').addEventListener('click', () => { try { localStorage.removeItem('ads.key'); localStorage.removeItem('ads.viewer'); } catch {} location.replace(location.pathname); });
+
+  // ---------------- đăng ký người xem ----------------
+  const segTo = (reg) => { $('segLogin').setAttribute('aria-selected', String(!reg)); $('segReg').setAttribute('aria-selected', String(reg)); $('lockForm').hidden = reg; $('regForm').hidden = !reg; (reg ? $('rName') : $('lu')).focus(); };
+  $('segLogin').addEventListener('click', () => segTo(false));
+  $('segReg').addEventListener('click', () => segTo(true));
+  const b64url = (t) => btoa(unescape(encodeURIComponent(t))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  const unb64url = (t) => decodeURIComponent(escape(atob(t.replace(/-/g, '+').replace(/_/g, '/'))));
+  $('regForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const err = $('rErr'); err.textContent = '';
+    const name = $('rName').value.trim(), u = normU($('rU').value), pw = $('rPw').value;
+    if (!/^[a-z0-9._-]{3,32}$/.test(u)) { err.textContent = 'Tên đăng nhập 3–32 ký tự, chỉ gồm chữ không dấu, số, dấu chấm, gạch.'; return; }
+    if (ADMIN_NAMES.includes(u)) { err.textContent = 'Tên này đã được dùng, hãy chọn tên khác.'; return; }
+    if (pw.length < 8) { err.textContent = 'Mật khẩu cần ít nhất 8 ký tự.'; return; }
+    if (pw !== $('rPw2').value) { err.textContent = 'Hai lần nhập mật khẩu không giống nhau.'; return; }
+    $('rBtn').disabled = true;
+    try {
+      const uid = await uidOf(u);
+      const taken = await fetch(`data/users/${uid}.json?t=${Date.now()}`, {cache: 'no-store'}).then((r) => r.ok, () => false);
+      if (taken) { err.textContent = 'Tên đăng nhập này đã có người dùng, hãy chọn tên khác.'; return; }
+      const salt = b64(crypto.getRandomValues(new Uint8Array(16))), iter = 200000;
+      const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveKey']);
+      const k = await crypto.subtle.deriveKey({name: 'PBKDF2', salt: unb64(salt), iterations: iter, hash: 'SHA-256'}, base, {name: 'AES-GCM', length: 256}, false, ['encrypt']);
+      const kp = await crypto.subtle.generateKey({name: 'ECDH', namedCurve: 'P-256'}, true, ['deriveBits']);
+      const pub = b64(new Uint8Array(await crypto.subtle.exportKey('raw', kp.publicKey)));
+      const iv = crypto.getRandomValues(new Uint8Array(12));
+      const ct = new Uint8Array(await crypto.subtle.encrypt({name: 'AES-GCM', iv}, k, await crypto.subtle.exportKey('pkcs8', kp.privateKey)));
+      const req = {v: 1, u, name, salt, iter, pub, priv: {iv: b64(iv), ct: b64(ct)}, t: new Date().toISOString()};
+      $('rCode').textContent = 'EAS1-' + b64url(JSON.stringify(req));
+      $('rOk').hidden = false;
+      for (const id of ['rName', 'rU', 'rPw', 'rPw2', 'rBtn']) $(id).hidden = true;
+      $('lu').value = u;
+    } catch (x) { err.textContent = 'Không tạo được tài khoản: ' + (x.message || x); }
+    finally { $('rBtn').disabled = false; }
+  });
+  $('rCopy').addEventListener('click', () => {
+    const note = $('rCopyNote');
+    navigator.clipboard.writeText($('rCode').textContent).then(() => { note.className = 'msg ok'; note.textContent = 'Đã copy mã. Gửi cho chủ trang nhé!'; }, () => { note.className = 'msg'; note.textContent = 'Bôi đen mã ở trên rồi copy.'; });
+  });
 
   async function boot() {
     try { META = await getJSON('data/meta.json'); } catch { META = null; }
+    let sv = null; try { sv = JSON.parse(localStorage.getItem('ads.viewer') || 'null'); } catch {}
+    if (sv?.uid && sv?.pk) {
+      try { const rec = await getJSON(`data/users/${sv.uid}.json`); await openViewer(sv.uid, unb64(sv.pk), rec); return; }
+      catch (x) { try { localStorage.removeItem('ads.viewer'); } catch {} $('pwErr').textContent = /không|chưa|Thử/.test(x?.message || '') ? x.message : 'Phiên đăng nhập đã hết, hãy đăng nhập lại.'; }
+    }
     if (META) {
       let saved = null; try { saved = localStorage.getItem('ads.key'); } catch {}
       if (saved) {
@@ -1376,7 +1803,7 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
     }
     $('lock').hidden = false;
     if (!META) $('pwErr').textContent = 'Chưa có dữ liệu. Hãy chạy đồng bộ lần đầu trên GitHub (xem HUONG-DAN.md).';
-    $('pw').focus();
+    if (/^#dang-ky/.test(location.hash)) segTo(true); else $('lu').focus();
   }
   boot();
 })();
