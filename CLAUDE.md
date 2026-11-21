@@ -50,14 +50,14 @@ Loại kết quả: lead, message, reach, click, engagement, other — chỉ **l
 - Lỗi 190 = mã Meta hết hạn/bị huỷ → tạo mã mới ở Graph API Explorer (app "Ads Superprint",
   id 1915751329586412) → Extend → dán vào secret META_TOKEN.
 
-## Người xem (chỉ xem Dashboard)
+## Người xem (chỉ xem Báo cáo ngày + Dashboard)
 - uid = sha256(tên đăng nhập viết thường)[:16]. Chủ trang đăng nhập với tên trống/`admin` + mật khẩu DATA_PASSWORD.
 - Người xem bấm Đăng ký → web tạo cặp khoá, khoá bí mật được khoá bằng mật khẩu của họ → ra mã `EAS1-…` gửi chủ trang.
 - Tab "Người xem" (chỉ chủ trang): dán mã, tick tài khoản → web mở `github.com/<repo>/new/main?filename=site/data/approvals/…&value=…`,
   chủ trang bấm Commit. Không dùng GitHub API từ trình duyệt (máy chủ trang bị "Failed to fetch").
   Push đó chạy workflow với `USERS_ONLY=1`: lấy bản approvals mới nhất mỗi người → users/, keys/, userlist.json, xoá approvals cũ.
 - Bỏ quyền/xoá người xem → máy đồng bộ đổi khoá tài khoản đó (mã cũ không mở được số liệu mới).
-- Người xem chỉ thấy tab Dashboard, không mở báo cáo ngày, không ra lệnh.
+- Người xem thấy tab Báo cáo ngày + Dashboard (của TK được cấp), không thấy Camp & lệnh / Người xem, không ra lệnh.
 
 ## Giao diện (site/index.html)
 Màn đăng nhập (chủ trang / người xem / đăng ký) → chọn BM → tài khoản → fanpage. 4 tab:

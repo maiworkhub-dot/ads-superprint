@@ -285,7 +285,7 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
       <p class="msg err" id="pwErr" aria-live="polite"></p>
     </form>
     <form id="regForm" hidden autocomplete="off">
-      <p class="hint" style="text-align:left">Tạo tài khoản để xem Dashboard. Sau khi tạo, gửi <b>mã đăng ký</b> cho chủ trang để được duyệt và cấp quyền xem.</p>
+      <p class="hint" style="text-align:left">Tạo tài khoản để xem báo cáo. Sau khi tạo, gửi <b>mã đăng ký</b> cho chủ trang để được duyệt và cấp quyền xem.</p>
       <input type="text" id="rName" placeholder="Họ tên" aria-label="Họ tên" required maxlength="60">
       <input type="text" id="rU" placeholder="Tên đăng nhập (chữ không dấu, số)" aria-label="Tên đăng nhập" required autocapitalize="none" spellcheck="false" maxlength="32" autocomplete="username">
       <input type="password" id="rPw" placeholder="Mật khẩu (ít nhất 8 ký tự)" aria-label="Mật khẩu" required minlength="8" autocomplete="new-password">
@@ -488,7 +488,7 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
     <div style="display:grid;gap:20px">
       <div class="card">
         <div class="card-head"><h2>Người xem</h2></div>
-        <p class="note">Người xem tự đăng ký ở màn hình đăng nhập (nút <b>Đăng ký</b>) rồi gửi bạn <b>mã đăng ký</b>. Bạn dán mã vào ô dưới, tick tài khoản quảng cáo được xem và bấm <b>Duyệt</b>. Người xem <b>chỉ thấy tab Dashboard</b> của các tài khoản được tick, không sửa hay bật/tắt được gì.</p>
+        <p class="note">Người xem tự đăng ký ở màn hình đăng nhập (nút <b>Đăng ký</b>) rồi gửi bạn <b>mã đăng ký</b>. Bạn dán mã vào ô dưới, tick tài khoản quảng cáo được xem và bấm <b>Duyệt</b>. Người xem <b>chỉ thấy Báo cáo ngày và Dashboard</b> của các tài khoản được tick, không sửa hay bật/tắt được gì.</p>
         <ol class="steps">
           <li>Bấm <b>Duyệt</b> (hoặc Lưu quyền / Xoá) → web mở một trang GitHub đã điền sẵn.</li>
           <li>Trên trang GitHub, bấm nút xanh <b>Commit changes…</b>, rồi bấm <b>Commit changes</b> lần nữa trong hộp hiện ra. (Nếu GitHub hỏi đăng nhập thì đăng nhập tài khoản GitHub của bạn.)</li>
@@ -876,7 +876,7 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
     $$('.rp').forEach((b) => b.setAttribute('aria-pressed', 'false'));
     renderDashboard();
   }));
-  const openDay = (date) => { if (isViewer()) return; reportDate = date; show('bao-cao'); renderReport(); };
+  const openDay = (date) => { reportDate = date; show('bao-cao'); renderReport(); };
 
   // --- chọn bộ chỉ số ---
   function renderSets() {
@@ -995,7 +995,7 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
     const C = $('charts'); C.replaceChildren();
     const boxes = mk.map((k) => {
       const m = MET[k], box = el('div', {className: 'chart'});
-      const note = m.kind === 'bar' ? (k === 'spend' && !isViewer() ? 'Bấm vào cột để mở báo cáo ngày đó.' : m.what) : `${m.what} Đường gạch là trung bình khoảng đang xem.`;
+      const note = m.kind === 'bar' ? (k === 'spend' ? 'Bấm vào cột để mở báo cáo ngày đó.' : m.what) : `${m.what} Đường gạch là trung bình khoảng đang xem.`;
       C.append(el('div', {className: 'card'}, el('h3', {textContent: `${m.lb} ${m.kind === 'bar' ? 'mỗi ngày' : 'theo ngày'}`}), el('p', {className: 'note', style: 'margin-top:4px', textContent: note}), box));
       return box;
     });
@@ -1052,7 +1052,7 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
     // báo cáo từng ngày (tổng của ngày)
     const drows = days.filter((d) => d.o.spend > 0 || d.o.res > 0).reverse();
     $('dayCount').textContent = `${drows.length} ngày có chi tiêu`;
-    $('dayNote').textContent = `Tổng của các camp đang chọn trong từng ngày, mới nhất ở trên. Dòng đầu là tổng cả khoảng. Màu xanh/đỏ so với trung bình khoảng đang xem.${isViewer() ? '' : ' Bấm vào một ngày để mở báo cáo ngày đó.'}`;
+    $('dayNote').textContent = `Tổng của các camp đang chọn trong từng ngày, mới nhất ở trên. Dòng đầu là tổng cả khoảng. Màu xanh/đỏ so với trung bình khoảng đang xem.${' Bấm vào một ngày để mở báo cáo ngày đó.'}`;
     const tdy = $('tDay');
     tdy.tHead.replaceChildren(el('tr', {}, el('th', {textContent: 'Ngày'}), ...mk.map((k) => el('th', {className: 'r', textContent: MET[k].lb})), el('th', {className: 'r', textContent: 'Camp chạy'})));
     const td = tdy.tBodies[0]; td.replaceChildren();
@@ -1060,7 +1060,7 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
     else td.append(el('tr', {className: 'total'}, el('td', {textContent: `Tổng ${drows.length} ngày`}), ...metCells(a), el('td', {className: 'r', textContent: num(rows.length)})));
     for (const d of drows) {
       const tr = el('tr', {}, el('td', {textContent: dayLbl(d.date), style: 'white-space:nowrap'}), ...metCells(d.o, a), el('td', {className: 'r', textContent: num(d.camps)}));
-      if (!isViewer()) { tr.style.cursor = 'pointer'; tr.addEventListener('click', () => openDay(d.date)); }
+      tr.style.cursor = 'pointer'; tr.addEventListener('click', () => openDay(d.date));
       td.append(tr);
     }
 
@@ -1127,7 +1127,7 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
       const r = svgEl('rect', {x: f.m.l + bw * i + gap / 2, y: f.m.t + f.ih - h, width: Math.max(1, bw - gap), height: h, rx: Math.min(4, (bw - gap) / 2), fill: d.date === reportDate ? 'var(--bar-hi)' : base, opacity: key === 'spend' ? 1 : .8});
       r.addEventListener('pointermove', (e) => { f.tip.replaceChildren(...dayTip(d)); placeTip(box, f.tip, e); r.setAttribute('fill', 'var(--bar-hi)'); });
       r.addEventListener('pointerleave', () => { f.tip.hidden = true; r.setAttribute('fill', d.date === reportDate ? 'var(--bar-hi)' : base); });
-      if (!isViewer()) { r.addEventListener('click', () => openDay(d.date)); r.style.cursor = 'pointer'; }
+      r.addEventListener('click', () => openDay(d.date)); r.style.cursor = 'pointer';
       f.svg.append(r);
     });
     xLabels(f, days, xpos);
@@ -1152,7 +1152,7 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
       const hit = svgEl('circle', {cx: xpos(p.i), cy: ypos(p[key]), r: 9, fill: 'transparent'});
       hit.addEventListener('pointermove', (e) => { f.tip.replaceChildren(...dayTip(p)); placeTip(box, f.tip, e); c.setAttribute('r', 5); });
       hit.addEventListener('pointerleave', () => { f.tip.hidden = true; c.setAttribute('r', pts.length > 60 ? 2.5 : 3.5); });
-      if (!isViewer()) { hit.addEventListener('click', () => openDay(p.date)); hit.style.cursor = 'pointer'; }
+      hit.addEventListener('click', () => openDay(p.date)); hit.style.cursor = 'pointer';
       f.svg.append(c, hit);
     }
     xLabels(f, days, xpos);
@@ -1189,7 +1189,7 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
   const VIEWS = ['bao-cao', 'dashboard', 'camp', 'users'];
   function show(v) {
     if (!VIEWS.includes(v)) v = 'bao-cao';
-    if (isViewer()) v = 'dashboard'; // người xem chỉ được xem Dashboard
+    if (isViewer() && !['bao-cao', 'dashboard'].includes(v)) v = 'bao-cao'; // người xem chỉ xem Báo cáo ngày + Dashboard
     for (const x of VIEWS) { $('v-' + x).hidden = x !== v; $('t-' + x).setAttribute('aria-selected', String(x === v)); }
     if (location.hash.slice(1) !== v) history.replaceState(null, '', '#' + v);
     renderView(v);
@@ -1585,7 +1585,7 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
       });
       box.append(el('div', {className: 'ucard'},
         el('div', {className: 'uh'}, el('span', {}, el('span', {className: 'nm', textContent: x.name || x.u}), el('span', {className: 'muted small', textContent: `  ·  ${x.u}`})), el('span', {className: 'chip good', textContent: 'Đã cấp quyền'})),
-        el('div', {className: 'small muted', textContent: `Cập nhật ${x.at ? new Date(x.at).toLocaleDateString('vi-VN') : '—'} · được xem ${(x.accounts || []).length} tài khoản · chỉ xem Dashboard`}),
+        el('div', {className: 'small muted', textContent: `Cập nhật ${x.at ? new Date(x.at).toLocaleDateString('vi-VN') : '—'} · được xem ${(x.accounts || []).length} tài khoản · chỉ xem Báo cáo ngày + Dashboard`}),
         picks, el('div', {className: 'row', style: 'margin-top:6px'}, save, del), msg));
     }
   }
@@ -1658,12 +1658,12 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
     enterApp();
   }
   function enterApp() {
-    for (const id of ['t-bao-cao', 't-camp', 't-users']) $(id).hidden = isViewer();
+    for (const id of ['t-camp', 't-users']) $(id).hidden = isViewer();
     $('who').hidden = !ME; if (ME) $('who').textContent = `👤 ${ME.name} · chỉ xem · `;
     const t = new Date(INDEX.synced_at || Date.now());
     $('autoSync').textContent = `Tự cập nhật lần cuối ${t.toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'})} ngày ${t.toLocaleDateString('vi-VN')}`;
     $('lock').hidden = true; $('app').hidden = false;
-    show(isViewer() ? 'dashboard' : (location.hash.slice(1) || 'bao-cao'));
+    show(location.hash.slice(1) || 'bao-cao');
     if (!accounts.length) { $('sync').textContent = isViewer() ? 'Chưa có số liệu cho tài khoản được cấp. Thử lại sau.' : 'Chưa có tài khoản nào. Kiểm tra mã truy cập Meta.'; return; }
     fillBm();
   }
