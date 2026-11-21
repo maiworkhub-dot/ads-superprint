@@ -278,5 +278,5 @@ export async function run(env = process.env) {
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  run().catch((e) => { console.error('[sync] THẤT BẠI:', e.message); process.exit(1); });
+  run().catch((e) => { console.error('[sync] THẤT BẠI:', e.message); console.log('::error title=Đồng bộ Meta thất bại::' + String(e.message).replace(/\n/g, ' ')); process.exit(1); });
 }
