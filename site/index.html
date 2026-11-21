@@ -1523,8 +1523,11 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
   const GH_REPO = 'maiworkhub-dot/evelyn-ads-studio', GH_DIR = 'site/data/users';
   const ghTok = { get() { try { return localStorage.getItem('ads.ghtoken') || ''; } catch { return ''; } }, set(v) { try { v ? localStorage.setItem('ads.ghtoken', v) : localStorage.removeItem('ads.ghtoken'); } catch {} } };
   async function gh(path, opt = {}) {
-    const r = await fetch(`https://api.github.com/repos/${GH_REPO}/${path}`, {method: opt.method || 'GET', body: opt.body, cache: 'no-store',
-      headers: {Accept: 'application/vnd.github+json', Authorization: `Bearer ${ghTok.get()}`, 'X-GitHub-Api-Version': '2022-11-28'}});
+    let r;
+    try {
+      r = await fetch(`https://api.github.com/repos/${GH_REPO}/${path}`, {method: opt.method || 'GET', body: opt.body,
+        headers: {Accept: 'application/vnd.github+json', Authorization: `token ${ghTok.get()}`}});
+    } catch { throw new Error('trình duyệt không kết nối được GitHub. Tắt trình chặn quảng cáo/VPN cho trang này, hoặc thử bằng Chrome/Safari khác rồi bấm lại.'); }
     if (r.status === 404 && opt.allow404) return null;
     const j = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(r.status === 401 ? 'mã GitHub sai hoặc hết hạn' : r.status === 403 ? 'mã GitHub chưa có quyền ghi (Contents: Read and write)' : (j.message || `GitHub lỗi ${r.status}`));
@@ -1541,7 +1544,7 @@ input[type=password] { font: inherit; color: var(--ink); background: var(--surfa
   }
   $('ghToggle').addEventListener('click', () => { ghEdit = !ghEdit; ghUI(); });
   $('ghSave').addEventListener('click', async () => {
-    const v = $('ghTok').value.trim(), m = $('ghMsg');
+    const v = $('ghTok').value.replace(/[^\x21-\x7e]/g, ''), m = $('ghMsg'); // bỏ dấu cách/ký tự ẩn khi copy
     if (!v) { ghTok.set(''); ghEdit = false; usersCache = null; m.textContent = ''; renderUsers(); return; }
     m.className = 'msg'; m.textContent = 'Đang kiểm tra mã…';
     const old = ghTok.get(); ghTok.set(v);
