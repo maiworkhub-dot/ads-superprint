@@ -8,18 +8,22 @@
 //   ACCOUNT_IDS      (tuỳ chọn) danh sách ID tài khoản, cách nhau bởi dấu phẩy, nếu chỉ muốn lấy vài tài khoản
 //   META_API_VERSION (tuỳ chọn) mặc định v23.0
 //   REFRESH_DAYS     (tuỳ chọn) số ngày gần nhất lấy lại mỗi lần chạy, mặc định 3 (lead hay được Meta cập nhật trễ)
+//   USERS_ONLY       (tuỳ chọn) =1: không gọi Meta, chỉ cập nhật quyền người xem (sau khi chủ trang duyệt/sửa quyền)
+//
+// Hàng số liệu theo ngày: [dd, chỉ_số_camp, spend, imp, reach, clicks, res, link_clicks, leads, msgs, engagement]
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
-import { deriveKey, encryptJSON, decryptJSON, newSalt, verifier, ITER } from './crypto.mjs';
+import { deriveKey, encryptJSON, decryptJSON, newSalt, verifier, ITER, newRawKey, importRawKey, sealFor } from './crypto.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const DATA = path.join(ROOT, 'site', 'data');
+let DATA = path.join(ROOT, 'site', 'data');
 const DEFAULT_BACKFILL = '2025-01-01';
 
 const LEAD_KEYS = ['lead', 'onsite_conversion.lead_grouped', 'leadgen_grouped', 'offsite_conversion.fb_pixel_lead', 'onsite_web_lead'];
 const MSG_KEYS = ['onsite_conversion.messaging_conversation_started_7d'];
+const ENG_KEYS = ['post_engagement', 'page_engagement'];
 
 const log = (...a) => console.log('[sync]', ...a);
 const sha = (s) => crypto.createHash('sha256').update(s).digest('hex').slice(0, 16);
@@ -72,17 +76,70 @@ function api(token, version) {
 
 // ---------------- file helpers ----------------
 async function readJSON(p, fallback) { try { return JSON.parse(await fs.readFile(p, 'utf8')); } catch { return fallback; } }
-async function writeIfChanged(p, key, obj, manifest, rel) {
-  const plain = JSON.stringify(obj); const h = sha(plain);
+async function writeIfChanged(p, key, obj, manifest, rel, kid = '') {
+  const plain = JSON.stringify(obj); const h = sha(plain + kid);
   if (manifest.files[rel] === h) return false;
   await fs.mkdir(path.dirname(p), { recursive: true });
   await fs.writeFile(p, JSON.stringify(await encryptJSON(key, obj)));
   manifest.files[rel] = h; return true;
 }
 
+// ---------------- người xem (chỉ xem Dashboard của tài khoản được cấp) ----------------
+// site/data/users/<uid>.json do chủ trang ghi khi duyệt (tên, khoá công khai, danh sách tài khoản được xem).
+// Máy đồng bộ gói khoá các tài khoản đó vào site/data/keys/<uid>.json (chỉ người đó mở được bằng mật khẩu của họ).
+const uidOf = (u) => crypto.createHash('sha256').update(String(u).trim().toLowerCase()).digest('hex').slice(0, 16);
+async function listJSON(dir) { try { return (await fs.readdir(dir)).filter((f) => f.endsWith('.json')); } catch { return []; } }
+
+async function rotateAccount(id, { ring, acctKey, manifest }) {
+  const oldKey = await acctKey(id);
+  ring.keys[id] = newRawKey();
+  const newKey = await acctKey(id), kid = sha(ring.keys[id]);
+  const files = [...(await listJSON(path.join(DATA, 'days'))).filter((f) => f.startsWith(`${id}__`)).map((f) => `days/${f}`), `acct/${id}.json`];
+  for (const rel of files) {
+    const p = path.join(DATA, rel), box = await readJSON(p, null);
+    if (!box) continue;
+    try { const obj = await decryptJSON(oldKey, box); await fs.writeFile(p, JSON.stringify(await encryptJSON(newKey, obj))); manifest.files[rel] = sha(JSON.stringify(obj) + kid); }
+    catch { log(`  không đổi khoá được ${rel}`); }
+  }
+  log(`Đã đổi khoá tài khoản ${id} vì có người bị thu hồi quyền.`);
+}
+
+async function syncUsers({ ring, acctKey, manifest }) {
+  const udir = path.join(DATA, 'users'), kdir = path.join(DATA, 'keys');
+  const users = [];
+  for (const f of await listJSON(udir)) {
+    const r = await readJSON(path.join(udir, f), null), uid = f.slice(0, -5);
+    if (!r?.u || !r?.pub || uidOf(r.u) !== uid) { log(`Bỏ qua hồ sơ người dùng không hợp lệ: ${f}`); continue; }
+    const accounts = [...new Set((r.accounts || []).map(String))].filter((a) => ring.keys[a]).sort();
+    users.push({ uid, r, accounts });
+  }
+  const want = new Map(users.map((x) => [x.uid, x.accounts]));
+  // thu hồi quyền => đổi khoá tài khoản đó để mã cũ không mở được số liệu mới
+  const revoked = new Set();
+  for (const [uid, g] of Object.entries(ring.grants || {})) for (const a of g.accounts || []) if (!(want.get(uid) || []).includes(a) && ring.keys[a]) revoked.add(a);
+  for (const a of revoked) await rotateAccount(a, { ring, acctKey, manifest });
+  const grants = {};
+  if (users.length) await fs.mkdir(kdir, { recursive: true });
+  for (const { uid, r, accounts } of users) {
+    const h = sha(r.pub + '|' + accounts.map((a) => a + ':' + sha(ring.keys[a])).join(','));
+    const p = path.join(kdir, `${uid}.json`);
+    const exists = await fs.access(p).then(() => true, () => false);
+    if (ring.grants?.[uid]?.h !== h || !exists) {
+      const keys = Object.fromEntries(accounts.map((a) => [a, ring.keys[a]]));
+      await fs.writeFile(p, JSON.stringify(await sealFor(r.pub, { u: r.u, accounts: keys, at: new Date().toISOString() })));
+      log(`Cấp quyền cho ${r.u}: ${accounts.length} tài khoản.`);
+    }
+    grants[uid] = { h, accounts };
+  }
+  for (const f of await listJSON(kdir)) if (!want.has(f.slice(0, -5))) { await fs.rm(path.join(kdir, f)); log(`Đã xoá quyền ${f}.`); }
+  ring.grants = grants;
+}
+
 export async function run(env = process.env) {
+  if (env.DATA_DIR) DATA = path.resolve(env.DATA_DIR);
   const token = env.META_TOKEN, password = env.DATA_PASSWORD;
-  if (!token) throw new Error('Thiếu META_TOKEN.');
+  const usersOnly = env.USERS_ONLY === '1';
+  if (!token && !usersOnly) throw new Error('Thiếu META_TOKEN.');
   if (!password) throw new Error('Thiếu DATA_PASSWORD.');
   const version = env.META_API_VERSION || 'v23.0';
   const refreshDays = Math.max(1, Number(env.REFRESH_DAYS || 3));
@@ -97,9 +154,30 @@ export async function run(env = process.env) {
     key = await deriveKey(password, meta.salt, meta.iter || ITER);
     try { await decryptJSON(key, meta.check); } catch { log('Mật khẩu đã đổi: mã hoá lại toàn bộ dữ liệu từ Meta.'); rekey = true; }
   }
+  if (usersOnly && (!meta?.salt || rekey)) throw new Error('Chưa có dữ liệu hoặc mật khẩu đã đổi: hãy chạy đồng bộ đầy đủ trước.');
   if (!meta?.salt || rekey) { meta = { salt: newSalt(), iter: ITER }; key = await deriveKey(password, meta.salt); meta.check = await verifier(key); rekey = true; }
   const manifestPath = path.join(DATA, 'manifest.json');
   const manifest = rekey ? { files: {} } : await readJSON(manifestPath, { files: {} });
+
+  // chùm khoá: khoá riêng từng tài khoản + quyền đã cấp cho người xem
+  const ringPath = path.join(DATA, 'keyring.json');
+  let ring = null;
+  if (!rekey) { try { ring = await decryptJSON(key, await readJSON(ringPath)); } catch { ring = null; } }
+  ring = { keys: {}, done: {}, grants: {}, ...(ring || {}) };
+  const keyCache = new Map();
+  const acctKey = async (id) => {
+    if (!ring.keys[id]) ring.keys[id] = newRawKey();
+    if (!keyCache.has(ring.keys[id])) keyCache.set(ring.keys[id], await importRawKey(ring.keys[id]));
+    return keyCache.get(ring.keys[id]);
+  };
+  const saveRing = async () => fs.writeFile(ringPath, JSON.stringify(await encryptJSON(key, ring)));
+
+  if (usersOnly) {
+    await syncUsers({ key, ring, acctKey, manifest });
+    await saveRing();
+    await fs.writeFile(manifestPath, JSON.stringify(manifest));
+    return null;
+  }
 
   let index = { accounts: [] };
   if (!rekey) { try { index = await decryptJSON(key, await readJSON(path.join(DATA, 'index.json'))); } catch { index = { accounts: [] }; } }
@@ -121,6 +199,8 @@ export async function run(env = process.env) {
   for (const a of accounts) {
     const id = String(a.account_id);
     const prev = prevAcc.get(id) || { campaigns: [], months: [] };
+    const akey = await acctKey(id);
+    const fresh = !ring.done[id]; // tài khoản chưa có dữ liệu theo khoá riêng (lần đầu / dữ liệu định dạng cũ) => lấy lại toàn bộ
     const tz = a.timezone_name || 'Asia/Ho_Chi_Minh';
     const today = todayIn(tz);
     const acc = {
@@ -157,7 +237,8 @@ export async function run(env = process.env) {
       }
       for (const t of acc.campaigns) { if (pageOf.has(t.id)) t.page_ids = [...pageOf.get(t.id)]; for (const pid of t.page_ids || []) allPages.add(pid); }
       // 3. số liệu theo ngày
-      const backfill = env.BACKFILL_FROM || (!prev.months?.length ? DEFAULT_BACKFILL : null);
+      const backfill = env.BACKFILL_FROM || (fresh || !prev.months?.length ? DEFAULT_BACKFILL : null);
+      if (fresh) for (const rel of Object.keys(manifest.files)) if (rel.startsWith(`days/${id}__`)) delete manifest.files[rel];
       const since = backfill || addDays(prev.synced_through || today, -(refreshDays - 1));
       const fetched = new Map(); // date -> rows
       const typeVotes = new Map();
@@ -165,7 +246,7 @@ export async function run(env = process.env) {
         const u = addDays(s, 89) < today ? addDays(s, 89) : today;
         const rows = await g.all(`act_${id}/insights`, {
           level: 'campaign', time_increment: '1', time_range: { since: s, until: u }, limit: '500',
-          fields: 'campaign_id,campaign_name,objective,spend,impressions,reach,clicks,actions',
+          fields: 'campaign_id,campaign_name,objective,spend,impressions,reach,clicks,inline_link_clicks,actions',
         });
         for (const r of rows) {
           const ci = ensure(r.campaign_id, r.campaign_name);
@@ -174,7 +255,7 @@ export async function run(env = process.env) {
           const v = typeVotes.get(ci) || { lead: 0, message: 0 }; v.lead += leads; v.message += msgs; typeVotes.set(ci, v);
           const date = r.date_start;
           if (!fetched.has(date)) fetched.set(date, []);
-          fetched.get(date).push({ ci, spend: Math.round(Number(r.spend) || 0), imp: Number(r.impressions) || 0, reach: Number(r.reach) || 0, clicks: Number(r.clicks) || 0, leads, msgs });
+          fetched.get(date).push({ ci, spend: Math.round(Number(r.spend) || 0), imp: Number(r.impressions) || 0, reach: Number(r.reach) || 0, clicks: Number(r.clicks) || 0, link: Number(r.inline_link_clicks) || 0, leads, msgs, eng: actionValue(r.actions, ENG_KEYS) });
         }
         log(`${acc.name}: ${s} → ${u}: ${rows.length} dòng`);
       }
@@ -182,13 +263,13 @@ export async function run(env = process.env) {
       for (const c of acc.campaigns) if (!c.result_type) c.result_type = resultType(c.objective, 0, 0);
 
       // 4. gộp vào file theo tháng
-      const months = new Set([...acc.months]);
+      const months = new Set(backfill ? [] : [...acc.months]);
       const touchedMonths = new Set();
       for (let d = since; d <= today; d = addDays(d, 1)) touchedMonths.add(d.slice(0, 7));
       for (const mo of touchedMonths) {
         const rel = `days/${id}__${mo}.json`, p = path.join(DATA, rel);
         let rows = [];
-        if (!rekey && !backfill) { try { rows = (await decryptJSON(key, await readJSON(p))).rows || []; } catch { rows = []; } }
+        if (!rekey && !backfill) { try { rows = (await decryptJSON(akey, await readJSON(p))).rows || []; } catch { rows = []; } }
         const lo = since > `${mo}-01` ? since : `${mo}-01`;
         rows = rows.filter((r) => `${mo}-${r[0]}` < lo); // bỏ các ngày vừa lấy lại
         for (const [date, list] of fetched) {
@@ -196,16 +277,17 @@ export async function run(env = process.env) {
           for (const x of list) {
             const t = acc.campaigns[x.ci].result_type;
             const res = t === 'lead' ? x.leads : t === 'message' ? x.msgs : 0;
-            if (x.spend > 0 || res > 0) rows.push([date.slice(8), x.ci, x.spend, x.imp, x.reach, x.clicks, res]);
+            if (x.spend > 0 || res > 0) rows.push([date.slice(8), x.ci, x.spend, x.imp, x.reach, x.clicks, res, x.link, x.leads, x.msgs, x.eng]);
           }
         }
         rows.sort((p1, p2) => p1[0].localeCompare(p2[0]) || p1[1] - p2[1]);
-        if (rows.length) { months.add(mo); if (await writeIfChanged(p, key, { account_id: id, month: mo, rows }, manifest, rel)) changed++; }
+        if (rows.length) { months.add(mo); if (await writeIfChanged(p, akey, { account_id: id, month: mo, rows }, manifest, rel, sha(ring.keys[id]))) changed++; }
       }
       acc.months = [...months].sort();
       const firstFetched = [...fetched.entries()].filter(([, l]) => l.some((x) => x.spend > 0)).map(([d]) => d).sort()[0];
       if (firstFetched && (!acc.first_date || firstFetched < acc.first_date || backfill)) acc.first_date = firstFetched;
       if (backfill && !firstFetched) acc.first_date = null;
+      ring.done[id] = true;
     } catch (e) {
       log(`Lỗi tài khoản ${acc.name}: ${e.message}`);
       Object.assign(acc, { ...prev, error: e.message, synced_through: prev.synced_through || null });
@@ -271,6 +353,17 @@ export async function run(env = process.env) {
   const out = { synced_at: new Date().toISOString(), token_expires: tokenExpires, api_version: version, pages, accounts: outAccounts };
   await fs.mkdir(DATA, { recursive: true });
   await fs.writeFile(path.join(DATA, 'index.json'), JSON.stringify(await encryptJSON(key, out)));
+  // bản riêng từng tài khoản (mã hoá bằng khoá của tài khoản) cho người xem được cấp quyền
+  for (const a of outAccounts) {
+    const pids = new Set((a.campaigns || []).flatMap((c) => c.page_ids || []));
+    const sub = Object.fromEntries(Object.entries(pages).filter(([k]) => pids.has(k)));
+    const rel = `acct/${a.id}.json`;
+    await fs.mkdir(path.join(DATA, 'acct'), { recursive: true });
+    await fs.writeFile(path.join(DATA, rel), JSON.stringify(await encryptJSON(await acctKey(a.id), { synced_at: out.synced_at, api_version: version, pages: sub, account: a })));
+    manifest.files[rel] = sha(out.synced_at + a.id);
+  }
+  await syncUsers({ key, ring, acctKey, manifest });
+  await saveRing();
   await fs.writeFile(metaPath, JSON.stringify(meta));
   await fs.writeFile(manifestPath, JSON.stringify(manifest));
   log(`Xong: ${outAccounts.length} tài khoản, ${changed} file số liệu thay đổi.`);

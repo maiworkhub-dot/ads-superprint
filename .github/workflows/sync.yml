@@ -12,7 +12,11 @@ on:
         default: ''
   push:
     branches: [main]
-    paths-ignore: ['site/data/**']
+    # sửa code => deploy lại; chủ trang duyệt/sửa người xem (site/data/users) => cấp quyền rồi deploy
+    paths:
+      - '**'
+      - '!site/data/**'
+      - 'site/data/users/**'
 
 permissions:
   contents: write
@@ -40,14 +44,21 @@ jobs:
           ACCOUNT_IDS: ${{ vars.ACCOUNT_IDS }}
           BACKFILL_FROM: ${{ github.event.inputs.backfill_from }}
         run: node scripts/sync.mjs
+      - name: Cập nhật quyền người xem
+        if: github.event_name == 'push'
+        env:
+          DATA_PASSWORD: ${{ secrets.DATA_PASSWORD }}
+          USERS_ONLY: '1'
+        run: node scripts/sync.mjs
       - name: Lưu số liệu vào kho
-        if: github.event_name != 'push'
         run: |
           git config user.name "ads-bot"
           git config user.email "ads-bot@users.noreply.github.com"
           git add site/data
-          git diff --cached --quiet || git commit -m "Cập nhật số liệu $(TZ=Asia/Ho_Chi_Minh date +'%d/%m %H:%M')"
-          git push
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "Cập nhật số liệu $(TZ=Asia/Ho_Chi_Minh date +'%d/%m %H:%M')"
+          for i in 1 2 3; do git pull --rebase origin main && git push && exit 0; sleep 5; done
+          exit 1
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
